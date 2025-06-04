@@ -1,0 +1,16 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/JavScraper/bin
+/JavScraper/obj
+/JavScraper/obj
+/JavScraper.App/bin
+/JavScraper.App/obj
+/.vs
+/JavScraper.Test/bin
+/JavScraper.Test/obj
+/JavScraper.Common/obj
+/JavScraper.Common/bin
+/JavScraper.Tools/bin
+/JavScraper.Tools/obj

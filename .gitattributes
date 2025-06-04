@@ -1,0 +1,2 @@
+JavScraper.Tools/ffmpeg/ffmpeg.exe filter=lfs diff=lfs merge=lfs -text
+*.exe filter=lfs diff=lfs merge=lfs -text
