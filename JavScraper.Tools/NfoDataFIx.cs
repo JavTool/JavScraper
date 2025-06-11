@@ -624,7 +624,7 @@ namespace JavScraper.Tools
                         if (nfoVideoInfo.Title.Contains("中字"))
                         {
                             nfoVideoInfo.Title = nfoVideoInfo.Title.Replace("[中字]", "[中字无码]");
-                            
+
                         }
                         else if (!nfoVideoInfo.Title.Contains("无码"))
                         {
@@ -1123,153 +1123,155 @@ namespace JavScraper.Tools
                                     }
                                 }
                             }
-                            // 无码的下载获取到的封面
-                            else if (javId.Type == JavIdType.Uncensored)
+                        }
+                        // 无码的下载获取到的封面
+                        else if (javId.Type == JavIdType.Uncensored)
+                        {
+                            var cover = await Downloader.DownloadJpegAsync(javVideo.Cover, nfoFileInfo.DirectoryName, javId.Id.ToUpper());
+                            if (cover != null)
                             {
-                                var cover = await Downloader.DownloadJpegAsync(javVideo.Cover, nfoFileInfo.DirectoryName, javId.Id.ToUpper());
-                                if (cover != null)
+                                coverDict.Add("fanart", cover);
+                            }
+                        }
+
+
+                        var fileName = $"fanart"; // 命名规则
+                        var savePath = Path.Combine(nfoFileInfo.DirectoryName, fileName);
+                        var saveName = $"{savePath}.jpg";
+                        if (coverDict != null && coverDict.Count > 0)
+                        {
+                            File.Copy(coverDict["fanart"], saveName, true);
+                        }
+                        else
+                        {
+                            await Downloader.DownloadJpegAsync(javVideo.Cover, nfoFileInfo.DirectoryName, savePath);
+                        }
+                        // 备份现有图片文件
+                        try
+                        {
+                            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                            var backupPath = Path.Combine(nfoFileInfo.DirectoryName, $"images_backup_{timestamp}.zip");
+
+                            // 获取所有图片文件，排除已存在的备份文件
+                            var imageFiles = Directory.GetFiles(nfoFileInfo.DirectoryName, "*.jpg")
+                                .Concat(Directory.GetFiles(nfoFileInfo.DirectoryName, "*.png"))
+                                .Concat(Directory.GetFiles(nfoFileInfo.DirectoryName, "*.webp"))
+                                .Where(f => !f.Contains("images_backup_"))
+                                .ToList();
+
+                            if (imageFiles.Any())
+                            {
+                                // 创建临时目录
+                                var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+                                Directory.CreateDirectory(tempDir);
+                                try
                                 {
-                                    coverDict.Add("fanart", cover);
-                                }
-                            }
-
-                            var fileName = $"fanart"; // 命名规则
-                            var savePath = Path.Combine(nfoFileInfo.DirectoryName, fileName);
-                            var saveName = $"{savePath}.jpg";
-                            if (coverDict != null && coverDict.Count > 0)
-                            {
-                                File.Copy(coverDict["fanart"], saveName, true);
-                            }
-                            else
-                            {
-                                await Downloader.DownloadJpegAsync(javVideo.Cover, nfoFileInfo.DirectoryName, savePath);
-                            }
-                            // 备份现有图片文件
-                            try
-                            {
-                                var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-                                var backupPath = Path.Combine(nfoFileInfo.DirectoryName, $"images_backup_{timestamp}.zip");
-
-                                // 获取所有图片文件，排除已存在的备份文件
-                                var imageFiles = Directory.GetFiles(nfoFileInfo.DirectoryName, "*.jpg")
-                                    .Concat(Directory.GetFiles(nfoFileInfo.DirectoryName, "*.png"))
-                                    .Concat(Directory.GetFiles(nfoFileInfo.DirectoryName, "*.webp"))
-                                    .Where(f => !f.Contains("images_backup_"))
-                                    .ToList();
-
-                                if (imageFiles.Any())
-                                {
-                                    // 创建临时目录
-                                    var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-                                    Directory.CreateDirectory(tempDir);
-                                    try
+                                    // 复制文件到临时目录
+                                    foreach (var file in imageFiles)
                                     {
-                                        // 复制文件到临时目录
-                                        foreach (var file in imageFiles)
-                                        {
-                                            File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
-                                        }
-                                        // 从临时目录创建 zip
-                                        ZipFile.CreateFromDirectory(tempDir, backupPath);
-                                        logger.LogInformation($"已创建图片备份：{backupPath}");
-
-                                        // 删除旧的备份文件
-                                        var oldBackups = Directory.GetFiles(nfoFileInfo.DirectoryName, "images_backup_*.zip")
-                                            .Where(f => f != backupPath)
-                                            .OrderByDescending(f => File.GetCreationTime(f))
-                                            .Skip(2) // 保留最新的2个备份
-                                            .ToList();
-
-                                        foreach (var oldBackup in oldBackups)
-                                        {
-                                            try
-                                            {
-                                                File.Delete(oldBackup);
-                                                logger.LogInformation($"已删除旧备份：{oldBackup}");
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                logger.LogError($"删除旧备份失败：{ex.Message}");
-                                            }
-                                        }
+                                        File.Copy(file, Path.Combine(tempDir, Path.GetFileName(file)));
                                     }
-                                    finally
+                                    // 从临时目录创建 zip
+                                    ZipFile.CreateFromDirectory(tempDir, backupPath);
+                                    logger.LogInformation($"已创建图片备份：{backupPath}");
+
+                                    // 删除旧的备份文件
+                                    var oldBackups = Directory.GetFiles(nfoFileInfo.DirectoryName, "images_backup_*.zip")
+                                        .Where(f => f != backupPath)
+                                        .OrderByDescending(f => File.GetCreationTime(f))
+                                        .Skip(2) // 保留最新的2个备份
+                                        .ToList();
+
+                                    foreach (var oldBackup in oldBackups)
                                     {
-                                        // 清理临时目录
-                                        if (Directory.Exists(tempDir))
+                                        try
                                         {
-                                            Directory.Delete(tempDir, true);
+                                            File.Delete(oldBackup);
+                                            logger.LogInformation($"已删除旧备份：{oldBackup}");
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            logger.LogError($"删除旧备份失败：{ex.Message}");
                                         }
                                     }
                                 }
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError($"创建图片备份失败：{ex.Message}");
-                            }
-
-                            if (File.Exists(saveName))
-                            {
-                                var thumbPicture = Path.Combine(nfoFileInfo.DirectoryName, "thumb.jpg");
-                                File.Copy(saveName, thumbPicture, true);
-                                var targetRatio = 2f / 3f;
-                                var folderPicture = Path.Combine(nfoFileInfo.DirectoryName, "folder.jpg");
-                                var posterPicture = Path.Combine(nfoFileInfo.DirectoryName, "poster.jpg");
-                                if (javId.Type == JavIdType.Censored)
+                                finally
                                 {
-                                    if (coverDict != null && coverDict.Count > 0)
+                                    // 清理临时目录
+                                    if (Directory.Exists(tempDir))
                                     {
-                                        // 检查 poster 图片分辨率
-                                        var posterPath = coverDict["poster"];
-                                        using (var image = System.Drawing.Image.FromFile(posterPath))
-                                        {
-                                            if (image.Height < 400 || image.Width < 300)
-                                            {
-                                                // 如果分辨率太低，使用 fanart 裁切
-                                                ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
-                                                File.Copy(folderPicture, posterPicture, true);
-                                            }
-                                            else
-                                            {
-                                                // 分辨率符合要求，直接使用 poster
-                                                File.Copy(coverDict["poster"], folderPicture, true);
-                                                File.Copy(coverDict["poster"], posterPicture, true);
-                                            }
-                                        }
+                                        Directory.Delete(tempDir, true);
                                     }
-                                    else
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError($"创建图片备份失败：{ex.Message}");
+                        }
+
+                        if (File.Exists(saveName))
+                        {
+                            var thumbPicture = Path.Combine(nfoFileInfo.DirectoryName, "thumb.jpg");
+                            File.Copy(saveName, thumbPicture, true);
+                            var targetRatio = 2f / 3f;
+                            var folderPicture = Path.Combine(nfoFileInfo.DirectoryName, "folder.jpg");
+                            var posterPicture = Path.Combine(nfoFileInfo.DirectoryName, "poster.jpg");
+                            if (javId.Type == JavIdType.Censored)
+                            {
+                                if (coverDict != null && coverDict.Count > 0)
+                                {
+                                    // 检查 poster 图片分辨率
+                                    var posterPath = coverDict["poster"];
+                                    using (var image = System.Drawing.Image.FromFile(posterPath))
                                     {
-                                        ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
-                                        File.Copy(folderPicture, posterPicture, true);
+                                        if (image.Height < 400 || image.Width < 300)
+                                        {
+                                            // 如果分辨率太低，使用 fanart 裁切
+                                            ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
+                                            File.Copy(folderPicture, posterPicture, true);
+                                        }
+                                        else
+                                        {
+                                            // 分辨率符合要求，直接使用 poster
+                                            File.Copy(coverDict["poster"], folderPicture, true);
+                                            File.Copy(coverDict["poster"], posterPicture, true);
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    File.Copy(saveName, folderPicture, true);
-                                    File.Copy(saveName, posterPicture, true);
+                                    ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
+                                    File.Copy(folderPicture, posterPicture, true);
                                 }
+                            }
+                            else
+                            {
+                                File.Copy(saveName, folderPicture, true);
+                                File.Copy(saveName, posterPicture, true);
+                            }
 
-                                // 替换 JavHelper 获取的带水印的封面和缩略图 -fanart.jpg、-poster.jpg 和 -thumb.jpg
+                            // 替换 JavHelper 获取的带水印的封面和缩略图 -fanart.jpg、-poster.jpg 和 -thumb.jpg
 
-                                var javHelperFanart = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-fanart.jpg");
-                                var javHelperThumb = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-thumb.jpg");
-                                var javHelperPoster = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-poster.jpg");
+                            var javHelperFanart = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-fanart.jpg");
+                            var javHelperThumb = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-thumb.jpg");
+                            var javHelperPoster = Path.Combine(nfoFileInfo.DirectoryName, $"{nfoFileInfo.Directory.Name}-poster.jpg");
 
-                                // 使用 fanart 替换对应文件
-                                if (File.Exists(javHelperFanart))
-                                {
-                                    File.Copy(saveName, javHelperFanart, true);
-                                    File.Copy(saveName, javHelperThumb, true);
-                                }
+                            // 使用 fanart 替换对应文件
+                            if (File.Exists(javHelperFanart))
+                            {
+                                File.Copy(saveName, javHelperFanart, true);
+                                File.Copy(saveName, javHelperThumb, true);
+                            }
 
-                                // 使用 folderPicture 替换 poster
-                                if (File.Exists(javHelperPoster))
-                                {
-                                    File.Copy(folderPicture, javHelperPoster, true);
-                                }
+                            // 使用 folderPicture 替换 poster
+                            if (File.Exists(javHelperPoster))
+                            {
+                                File.Copy(folderPicture, javHelperPoster, true);
                             }
                         }
                     }
+
                 }
                 catch (Exception ex)
                 {

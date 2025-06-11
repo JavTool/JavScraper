@@ -135,6 +135,15 @@ namespace JavScraper.Tools.Scrapers
             {
                 var jsonUrl = $"https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/{number}.json";
                 var url = $"https://www.1pondo.tv/movies/{number}/";
+                var doc = await GetRenderedHtmlAsync(url);
+
+                if (doc == null)
+                    return null;
+
+
+                var sampleNodes = doc.DocumentNode.SelectNodes("//img[contains(@class,'gallery-image pointer')]");
+                if (sampleNodes?.Any() != true)
+                    return null;
 
                 var json = await GetStringAsync(jsonUrl);
                 var options = new JsonSerializerOptions
@@ -146,27 +155,50 @@ namespace JavScraper.Tools.Scrapers
 
                 async Task<String> GetPoster()
                 {
-                    string posterUrl = $"https://www.1pondo.tv/dyn/dla/images/movies/{number}/jacket/jacket.jpg";
+                    // https://www.1pondo.tv/moviepages/061025_001/images/str.jpg
+                    string posterUrl = $"https://www.1pondo.tv/moviepages/{number}/images/str.jpg";
                     if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
                     {
                         return posterUrl;
                     }
                     return String.Empty;
                 }
-
+                async Task<string> GetJacket()
+                {
+                    string jacketUrl = $"https://www.1pondo.tv/dyn/dla/images/movies/{number}/jacket/jacket.jpg";
+                    if (await HttpUtils.IsUrlAvailableAsync(jacketUrl))
+                    {
+                        return jacketUrl;
+                    }
+                    return string.Empty;
+                }
                 async Task<List<string>> GetSamples()
                 {
+
                     // https://www.1pondo.tv/assets/sample/031216_261/popu/1.jpg
                     List<string> samples = new List<string>();
+
+                    var jacketUrl = await GetJacket();
+                    if (!String.IsNullOrEmpty(jacketUrl))
+                    {
+                        samples.Add(jacketUrl);
+                    }
+
                     var posterUrl = await GetPoster();
                     if (!String.IsNullOrEmpty(posterUrl))
                     {
                         samples.Add(posterUrl);
                     }
-                    for (int i = 1; i <= 3; i++)
+                    foreach (var sampleNode in sampleNodes)
                     {
-                        samples.Add($"https://www.1pondo.tv/assets/sample/{number}/popu/{i}.jpg");
+
+                        var sample = sampleNode.GetAttributeValue("data-vue-img-src", "");
+                        if (sample != null)
+                        {
+                            samples.Add($"https://www.1pondo.tv/{sample}");
+                        }
                     }
+
                     return samples;
                 }
 
@@ -189,7 +221,7 @@ namespace JavScraper.Tools.Scrapers
                     //Studio = GetValue("發行"),
                     //Set = GetValue("系列"),
                     //Director = GetValue("導演"),
-                    Fanart = $"https://www.1pondo.tv/dyn/dla/images/movies/{number}/jacket/jacket.jpg",
+                    //Fanart = $"https://www.1pondo.tv/dyn/dla/images/movies/{number}/jacket/jacket.jpg",
                     //Poster = GetPoster(),
                     //Actors = GetActors(),
                     Samples = await GetSamples(),
@@ -281,8 +313,21 @@ namespace JavScraper.Tools.Scrapers
                     }
                     return ac;
                 }
-                string GetCover()
+                async Task<string> GetCover()
                 {
+                    string posterUrl = $"https://www.caribbeancompr.com/moviepages/{number}/images/jacket.jpg";
+                    if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
+                    {
+                        return posterUrl;
+                    }
+                    else
+                    {
+                        posterUrl = $"https://www.caribbeancompr.com/moviepages/{number}/images/main_s.jpg";
+                        if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
+                        {
+                            return posterUrl;
+                        }
+                    }
                     // 获取背景图片
                     var posterNode = doc.DocumentNode.SelectSingleNode("//div[@class='vjs-poster']");
                     if (posterNode != null)
@@ -303,21 +348,38 @@ namespace JavScraper.Tools.Scrapers
                     return null;
                 }
 
+                async Task<string> GetJacket()
+                {
+                    string jacketUrl = $"https://www.caribbeancompr.com/moviepages/{number}/images/jacket.jpg";
+                    if (await HttpUtils.IsUrlAvailableAsync(jacketUrl))
+                    {
+                        return jacketUrl;
+                    }
+                    return string.Empty;
+                }
+
                 async Task<String> GetPoster()
                 {
-                    // https://www.caribbeancompr.com/moviepages/041319_002/images/main_s.jpg
                     string posterUrl = $"https://www.caribbeancompr.com/moviepages/{number}/images/main_s.jpg";
                     if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
                     {
                         return posterUrl;
                     }
+
                     return String.Empty;
                 }
+
                 async Task<List<string>> GetSamples()
                 {
 
                     // https://www.caribbeancompr.com/moviepages/050115_195/images/l/001.jpg
                     List<string> samples = new List<string>();
+                    var jacketUrl = await GetJacket();
+                    if (!String.IsNullOrEmpty(jacketUrl))
+                    {
+                        samples.Add(jacketUrl);
+                    }
+
                     var posterUrl = await GetPoster();
                     if (!String.IsNullOrEmpty(posterUrl))
                     {
@@ -334,7 +396,7 @@ namespace JavScraper.Tools.Scrapers
                     //Provider = Name,
                     Url = url,
                     Title = title,
-                    Cover = GetCover(),
+                    Cover = await GetCover(),
                     Plot = plot,
                     //Number = GetValue("番號"),
                     //Date = GetValue("日期"),
@@ -420,7 +482,7 @@ namespace JavScraper.Tools.Scrapers
 
                 async Task<String> GetPoster()
                 {
-                    string posterUrl = $"https://www.caribbeancom.com/moviepages/{number}/images/jacket.jpg";
+                    string posterUrl = $"https://www.caribbeancom.com/moviepages/{number}/images/l_l.jpg";
                     if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
                     {
                         return posterUrl;
@@ -428,24 +490,19 @@ namespace JavScraper.Tools.Scrapers
                     return String.Empty;
                 }
 
-                async Task<List<string>> GetSamples()
+
+
+                async Task<string> GetJacket()
                 {
-                    // https://www.caribbeancom.com/moviepages/111415-022/images/l/001.jpg
-                    // https://www.caribbeancom.com/moviepages/111415-022/images/jacket.jpg
-                    List<string> samples = new List<string>();
-                    var posterUrl = await GetPoster();
-                    if (!String.IsNullOrEmpty(posterUrl))
+                    string jacketUrl = $"https://www.caribbeancom.com/moviepages/{number}/images/jacket.jpg";
+                    if (await HttpUtils.IsUrlAvailableAsync(jacketUrl))
                     {
-                        samples.Add(posterUrl);
+                        return jacketUrl;
                     }
-                    for (int i = 1; i <= 4; i++)
-                    {
-                        samples.Add($"https://www.caribbeancom.com/moviepages/{number}/images/l/00{i}.jpg");
-                    }
-                    return samples;
+                    return string.Empty;
                 }
 
-                string GetCover()
+                async Task<string> GetCover()
                 {
                     // 获取背景图片
                     var posterNode = doc.DocumentNode.SelectSingleNode("//div[@class='vjs-poster']");
@@ -467,12 +524,35 @@ namespace JavScraper.Tools.Scrapers
                     return null;
                 }
 
+                async Task<List<string>> GetSamples()
+                {
+                    // https://www.caribbeancom.com/moviepages/111415-022/images/l/001.jpg
+                    List<string> samples = new List<string>();
+                    var jacketUrl = await GetJacket();
+                    if (!String.IsNullOrEmpty(jacketUrl))
+                    {
+                        samples.Add(jacketUrl);
+                    }
+
+                    var posterUrl = await GetPoster();
+                    if (!String.IsNullOrEmpty(posterUrl))
+                    {
+                        samples.Add(posterUrl);
+                    }
+
+                    for (int i = 1; i <= 4; i++)
+                    {
+                        samples.Add($"https://www.caribbeancom.com/moviepages/{number}/images/l/00{i}.jpg");
+                    }
+                    return samples;
+                }
+
                 var javVideo = new JavVideo()
                 {
                     //Provider = Name,
                     Url = url,
                     //Title = $"{doc.DocumentNode.SelectSingleNode("//*[contains(@class,'title')]/strong")?.InnerText?.Trim()} {doc.DocumentNode.SelectSingleNode("//*[contains(@class,'current-title')]")?.InnerText?.Trim()}",
-                    Cover = GetCover(),
+                    Cover = await GetCover(),
                     //Number = GetValue("番號"),
                     //Date = GetValue("日期"),
                     //Runtime = GetValue("時長"),
@@ -566,9 +646,21 @@ namespace JavScraper.Tools.Scrapers
                     return ac;
                 }
 
+
+
+                async Task<string> GetJacket()
+                {
+                    string jacketUrl = $"https://www.pacopacomama.com/moviepages/{number}/images/jacket.jpg";
+                    if (await HttpUtils.IsUrlAvailableAsync(jacketUrl))
+                    {
+                        return jacketUrl;
+                    }
+                    return string.Empty;
+                }
+
                 async Task<String> GetPoster()
                 {
-                    string posterUrl = $"https://www.pacopacomama.com/moviepages/{number}/images/jacket.jpg";
+                    string posterUrl = $"https://www.pacopacomama.com/moviepages/{number}/images/l_hd.jpg";
                     if (await HttpUtils.IsUrlAvailableAsync(posterUrl))
                     {
                         return posterUrl;
@@ -579,8 +671,13 @@ namespace JavScraper.Tools.Scrapers
                 async Task<List<string>> GetSamples()
                 {
                     // https://www.pacopacomama.com/moviepages/111415-022/images/l/001.jpg
-                    // https://www.pacopacomama.com/moviepages/111415-022/images/jacket.jpg
                     List<string> samples = new List<string>();
+                    var jacketUrl = await GetJacket();
+                    if (!String.IsNullOrEmpty(jacketUrl))
+                    {
+                        samples.Add(jacketUrl);
+                    }
+
                     var posterUrl = await GetPoster();
                     if (!String.IsNullOrEmpty(posterUrl))
                     {
@@ -703,6 +800,7 @@ namespace JavScraper.Tools.Scrapers
                 // 获取封面图片
                 string GetCover()
                 {
+                    // https://www.heyzo.com/contents/3000/0273/images/thumbnail.jpg
                     // 获取背景图片
                     var posterNode = doc.DocumentNode.SelectSingleNode("//div[@class='vjs-poster']");
                     if (posterNode != null)
