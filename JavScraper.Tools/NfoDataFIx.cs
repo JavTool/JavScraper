@@ -1,4 +1,4 @@
-﻿using JavScraper.Tools.Entities;
+using JavScraper.Tools.Entities;
 using JavScraper.Tools.Http;
 using JavScraper.Tools.Tools;
 using Microsoft.Extensions.Logging;
@@ -16,6 +16,28 @@ using JavScraper.Tools.Utils;
 
 namespace JavScraper.Tools
 {
+    /// <summary>
+    /// NFO 数据修复工具类。
+    /// 
+    /// ⚠️ 已弃用 - 此类已被重构为更好的架构
+    /// 
+    /// 迁移指南:
+    /// 1. 使用 NfoDataProcessor 替代此类
+    /// 2. 使用 NfoDataProcessorFactory.Create() 创建实例
+    /// 3. 调用 FixNfoTagsAsync() 或 FixNfoDataAsync() 方法
+    /// 
+    /// 示例:
+    /// var processor = NfoDataProcessorFactory.Create();
+    /// var result = await processor.FixNfoTagsAsync(nfoFilePath);
+    /// 
+    /// 新架构优势:
+    /// - 职责分离，代码更清晰
+    /// - 更好的错误处理和日志记录
+    /// - 支持依赖注入和单元测试
+    /// - 配置化的处理选项
+    /// - 更好的性能和并发控制
+    /// </summary>
+    [Obsolete("此类已被重构。请使用 NfoDataProcessor 替代。详见类注释中的迁移指南。", false)]
     public class NfoDataFIx
     {
         #region 声明静态配置...

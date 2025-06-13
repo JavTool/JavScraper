@@ -1,4 +1,5 @@
 using JavScraper.Tools.Entities;
+using JavScraper.Tools.Entities;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -6,23 +7,23 @@ using System.Threading.Tasks;
 namespace JavScraper.Tools.Scrapers
 {
     /// <summary>
-    /// Caribbeancom 刮削器
+    /// Heyzo 刮削器
     /// </summary>
-    public class CaribbeancomScraper : IUncensoredScraper
+    public class HeyzoScraper : IUncensoredScraper
     {
         private readonly JavUncensoredScraper javUncensoredScraper;
 
-        public CaribbeancomScraper(JavUncensoredScraper javUncensoredScraper)
+        public HeyzoScraper(JavUncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }
 
-        public string Name => "Caribbeancom";
+        public string Name => "Heyzo";
 
         public bool CanHandle(JavId javId)
         {
-            // Caribbeancom 格式: 数字-数字 (例如: 010122-001)
-            return System.Text.RegularExpressions.Regex.IsMatch(javId, @"^\d{6}-\d{3}$");
+            // Heyzo 格式: HEYZO-数字 (例如: HEYZO-1234)
+            return System.Text.RegularExpressions.Regex.IsMatch(javId, @"^HEYZO-\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         }
 
         public async Task<JavVideo> GetMetadataAsync(JavId javId)
@@ -30,7 +31,7 @@ namespace JavScraper.Tools.Scrapers
             if (!CanHandle(javId))
                 return null;
 
-            return await javUncensoredScraper.GetCaribbeanMetadata(javId);
+            return await javUncensoredScraper.GetHeyzoMetadata(javId);
         }
     }
 }

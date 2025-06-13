@@ -3,20 +3,25 @@ using JavScraper.Tools;
 using JavScraper.Tools.Entities;
 using JavScraper.Tools.Http;
 using JavScraper.Tools.Scrapers;
+using JavScraper.Tools.Services;
+using JavScraper.Tools.Utils;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 public class VideoInfoFetcher
-{
-    private readonly ILoggerFactory _loggerFactory;
+    {
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly MultiScraperService _multiScraperService;
 
     public VideoInfoFetcher(ILoggerFactory loggerFactory)
-    {
-        _loggerFactory = loggerFactory;
-    }
+        {
+            _loggerFactory = loggerFactory;
+            _multiScraperService = new MultiScraperService(loggerFactory);
+        }
 
     public async Task<JavVideo> FetchCensoredVideo(string javId)
     {
@@ -28,7 +33,7 @@ public class VideoInfoFetcher
 
     public async Task<JavVideo> FetchUncensoredVideo(JavId javId)
     {
-        var videoInfo = await TryFetchFromJavDBUncensored(javId);
+        var videoInfo = await TryFetchFromJavUncensoredScraper(javId);
         return videoInfo;
     }
 
@@ -90,43 +95,14 @@ public class VideoInfoFetcher
 
     public async Task<JavVideo> TryGetMetadataAsync(JavId javId)
     {
-        var javDBScraper = new JavDBUncensored(_loggerFactory);
         var makers = await HttpUtils.CheckMakerAsync(javId);
-        if (makers == null || makers.Count == 0)
-            return null;
-
-        foreach (var maker in makers)
-        {
-            try
-            {
-                var video = maker switch
-                {
-                    "Caribbeancom" => await javDBScraper.GetCaribbeanMetadata(javId),
-                    "CaribbeancomPR" => await javDBScraper.GetCaribbeanPRMetadata(javId),
-                    "1Pondo" => await javDBScraper.Get1PondoMetadata(javId),
-                    "Pacopacomama" => await javDBScraper.GetPacopacomamaMetadata(javId),
-                    _ => null
-                };
-
-                // 如果获取成功，立即返回
-                if (video != null)
-                {
-                    Console.WriteLine($"成功从 {maker} 获取番号 {javId.Id} 的数据");
-                    return video;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"尝试从 {maker} 获取数据失败：{ex.Message}");
-            }
-        }
-
-        Console.WriteLine($"所有来源都无法获取番号 {javId.Id} 的元数据");
-        return null;
+        
+        // 使用多刮削器服务获取最佳结果
+        return await _multiScraperService.GetBestMetadataAsync(javId, makers);
     }
-    private async Task<JavVideo> TryFetchFromJavDBUncensored(JavId javId)
+    private async Task<JavVideo> TryFetchFromJavUncensoredScraper(JavId javId)
     {
-        var javDBScraper = new JavDBUncensored(_loggerFactory);
+        var javDBScraper = new JavUncensoredScraper(_loggerFactory);
         try
         {
             JavVideo javVideo = await javDBScraper.SearchAndParseJavVideo(javId);
