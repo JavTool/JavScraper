@@ -14,3 +14,4 @@
 /JavScraper.Common/bin
 /JavScraper.Tools/bin
 /JavScraper.Tools/obj
+*.log
