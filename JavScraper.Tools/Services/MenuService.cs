@@ -120,7 +120,7 @@ namespace JavScraper.Tools.Services
             string path = Console.ReadLine();
             if (!string.IsNullOrEmpty(path))
             {
-                await _metadataService.QuickCutCover(path);
+                await MetadataService.QuickCutCover(path);
             }
         }
     }

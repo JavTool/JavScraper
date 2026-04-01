@@ -9,12 +9,12 @@ using System.Xml.Linq;
 
 namespace JavScraper.App
 {
-    public class NfoFileManager
+    public class NfoDocument
     {
         private string _filePath;
         private XElement _nfoContent;
 
-        public NfoFileManager(string filePath)
+        public NfoDocument(string filePath)
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
             {

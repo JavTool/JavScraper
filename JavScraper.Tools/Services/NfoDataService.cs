@@ -21,7 +21,7 @@ namespace JavScraper.Tools.Services
     {
         private readonly ILogger<NfoDataService> _logger;
         private readonly ILoggerFactory _loggerFactory;
-        private NfoFileManager _nfoManager;
+        private NfoDocument _nfoManager;
         private readonly FileOperationService _fileOperationService;
         private readonly TagProcessingService _tagProcessingService;
 
@@ -51,7 +51,7 @@ namespace JavScraper.Tools.Services
                 var result = new NfoProcessResult { FilePath = nfoFilePath };
 
                 // 读取 NFO 文件
-                _nfoManager = new NfoFileManager(nfoFilePath);
+                _nfoManager = new NfoDocument(nfoFilePath);
                 var nfoVideoInfo = _nfoManager.GetJavVideo();
                 if (nfoVideoInfo == null)
                 {
@@ -196,7 +196,7 @@ namespace JavScraper.Tools.Services
                 standardMetadata.OriginalTitle = titleInfo.OriginalTitle;
 
                 // 保存更新后的 NFO
-                var nfoManager = new NfoFileManager(nfoFilePath);
+                var nfoManager = new NfoDocument(nfoFilePath);
                 
                 nfoManager.SaveMetadata(standardMetadata.Title, standardMetadata.OriginalTitle, standardMetadata.SortTitle,
                      javVideoForProcessing?.Plot, standardMetadata.Number, javVideoForProcessing?.Actors,
@@ -312,7 +312,7 @@ namespace JavScraper.Tools.Services
 
                 foreach (var nfoFile in nfoFiles)
                 {
-                    var nfoManager = new NfoFileManager(nfoFile);
+                    var nfoManager = new NfoDocument(nfoFile);
                     // VideoInfo类没有Plot、Actors、Genres、Tags、GetYear等属性，需要从JavVideo获取
                     var javVideo = await new VideoInfoFetcher(_loggerFactory).TryGetMetadataAsync(videoInfo.Number);
                     nfoManager.SaveMetadata(videoInfo.Title, videoInfo.OriginalTitle, videoInfo.SortTitle,

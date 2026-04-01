@@ -519,7 +519,7 @@ namespace JavScraper.Tools
                 Console.WriteLine($"当前处理的文件：{nfoFile}");
 
                 // 读取 nfo 文件内容
-                NfoFileManager nfoManager = new NfoFileManager(nfoFile);
+                NfoDocument nfoManager = new NfoDocument(nfoFile);
                 if (String.IsNullOrEmpty(nfoManager.ToString()))
                 {
                     Console.WriteLine($"获取 「{nfoFile}」 番号异常，跳过执行。");
@@ -899,7 +899,7 @@ namespace JavScraper.Tools
                 Console.WriteLine($"当前处理的文件：{nfoFile}");
 
                 // 读取 nfo 文件内容
-                NfoFileManager nfoManager = new NfoFileManager(nfoFile);
+                NfoDocument nfoManager = new NfoDocument(nfoFile);
                 if (String.IsNullOrEmpty(nfoManager.ToString()))
                 {
                     Console.WriteLine($"获取 「{nfoFile}」 番号异常，跳过执行。");

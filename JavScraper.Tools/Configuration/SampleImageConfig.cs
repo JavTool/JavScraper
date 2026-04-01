@@ -11,12 +11,12 @@ namespace JavScraper.Tools.Configuration
         /// <summary>
         /// 是否使用单独目录下载样本图片
         /// </summary>
-        public bool UseSeparateDirectory { get; set; } = true;
+        public bool UseSeparateDirectory { get; set; } = false;
 
         /// <summary>
         /// 单独目录名称
         /// </summary>
-        public string DirectoryName { get; set; } = "sample";
+        public string DirectoryName { get; set; } = "samples";
 
         /// <summary>
         /// 从配置文件加载配置

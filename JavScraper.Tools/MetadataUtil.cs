@@ -65,7 +65,7 @@ namespace JavScraper.Tools
 
                     fileInfo.CopyTo(destFileName);
 
-                    var nfoManager = new NfoFileManager(javFile.Key);
+                    var nfoManager = new NfoDocument(javFile.Key);
                     if (string.IsNullOrEmpty(nfoManager.ToString()))
                     {
                         Console.WriteLine(string.Format(MetadataErrorLog, javFile.Key));
@@ -109,7 +109,7 @@ namespace JavScraper.Tools
             Console.WriteLine(message);
         }
 
-        private static (string Title, string SortTitle, string OriginalTitle, List<string> Genres, List<string> Tags) GetNfoMetadata(NfoFileManager nfoManager)
+        private static (string Title, string SortTitle, string OriginalTitle, List<string> Genres, List<string> Tags) GetNfoMetadata(NfoDocument nfoManager)
         {
             var title = nfoManager.GetTitle();
             var sortTitle = nfoManager.GetSortTitle();
@@ -200,7 +200,7 @@ namespace JavScraper.Tools
             return videoSortTitle;
         }
 
-        private static void FixActors(FileInfo fileInfo, NfoFileManager nfoManager, JavVideo javVideo)
+        private static void FixActors(FileInfo fileInfo, NfoDocument nfoManager, JavVideo javVideo)
         {
             if (fileInfo.Name.Contains("-CD") || fileInfo.Name.Contains("- CD") && javVideo.Actors.Any())
             {

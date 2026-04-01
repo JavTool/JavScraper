@@ -6,7 +6,9 @@ import os
 from urllib.parse import urlparse
 import argparse
 import xml.etree.ElementTree as ET
-
+import json
+import shutil
+import zhconv
 # 处理日期格式，支持将"*天前"和"*小时前"转换为 yyyy-mm-dd 格式
 def convert_relative_date(date_str):
     
@@ -127,6 +129,11 @@ def scrape_madou(jav_id, source_url=None, source_file_path="./downloaded", save_
     
     # 发送请求获取页面内容
     response = requests.get(source_url, headers=headers)
+    if(response.status_code == 404):
+        formatted_id = jav_id.lower().replace('-', '')
+        source_url = f'https://madouqu.com/video/{formatted_id}/'
+        response = requests.get(source_url, headers=headers)
+
     soup = BeautifulSoup(response.text, 'html.parser')
 
     # 标题 (.entry-title)
@@ -162,18 +169,31 @@ def scrape_madou(jav_id, source_url=None, source_file_path="./downloaded", save_
                 fanhao_match = re.search(r'番號[:：]\s*([A-Z0-9\-]+)', element_text)
             if fanhao_match:
                 fanhao = fanhao_match.group(1)
-        
+                # 如果番号不包含连字符，在字母和数字之间添加连字符
+            if '-' not in fanhao:
+                fanhao = re.sub(r'([A-Z]+)([0-9]+)', r'\1-\2', fanhao)
+    
         # 在同一元素中搜索女郎
         if '女郎' in element_text:
-            girl_match = re.search(r'女郎[:：]\s*([\u4e00-\u9fa5a-zA-Z0-9\s]+)', element_text)
+            girl_match = re.search(r'女郎[:：]\s*([\u4e00-\u9fa5a-zA-Z0-9\s、，,]+)', element_text)
             if girl_match:
-                girl = girl_match.group(1).strip()
+                girl_raw = girl_match.group(1).strip()
+                # 处理多个演员名字
+                girl = process_multiple_actresses(girl_raw)
+            if '小婕' in girl:
+                girl = girl.replace('小婕', '张雅婷')
+            if '小捷' in girl:
+                girl = girl.replace('小捷', '张雅婷')
         
         # 在同一元素中搜索片名
         if '片名' in element_text:
             title_match = re.search(r'片名[:：]\s*(.+)', element_text)
             if title_match:
                 pianming = title_match.group(1).strip()
+                # 将繁体字转换为简体字
+                pianming = convert_traditional_to_simplified(pianming)
+                # 处理中英文之间的空格
+                pianming = format_chinese_english_spacing(pianming)
 
 
     # 创建基于片商的文件夹
@@ -190,9 +210,14 @@ def scrape_madou(jav_id, source_url=None, source_file_path="./downloaded", save_
     category_dir = os.path.join(save_directory, clean_category)
     os.makedirs(category_dir, exist_ok=True)
     
+    # 创建演员文件夹
+    clean_girl = clean_dirname(girl) if girl else "未知演员"
+    girl_dir = os.path.join(category_dir, clean_girl)
+    os.makedirs(girl_dir, exist_ok=True)
+    
     # 创建基于文件名的子文件夹
     folder_name = generate_filename(meta_date, fanhao, pianming, girl)
-    movie_dir = os.path.join(category_dir, folder_name)
+    movie_dir = os.path.join(girl_dir, folder_name)
     os.makedirs(movie_dir, exist_ok=True)
     
     print(f"创建文件夹: {movie_dir}")
@@ -283,10 +308,88 @@ def extract_jav_id_from_filename(filename):
     for pattern in patterns:
         matches = re.findall(pattern, filename, re.IGNORECASE)
         if matches:
-            # 返回第一个匹配结果，并转换为大写
-            return matches[0].upper()
+            # 获取第一个匹配结果
+            jav_id = matches[0].upper()
+            # 去除中文字符，只保留英文字母、数字和连字符
+            jav_id_clean = re.sub(r'[^A-Z0-9\-]', '', jav_id)
+            return jav_id_clean
     
     return None
+
+
+def process_multiple_actresses(girl_text):
+    """
+    处理多个演员名字，支持中文顿号、中英文逗号分隔
+    
+    参数:
+        girl_text (str): 原始演员文本
+        
+    返回:
+        str: 处理后的演员名字，多个演员用空格分隔
+    """
+    if not girl_text:
+        return girl_text
+    
+    # 分割演员名字，支持中文顿号、中英文逗号
+    actresses = re.split(r'[、，,]', girl_text)
+    
+    # 清理每个演员名字并去除空白
+    cleaned_actresses = []
+    for actress in actresses:
+        actress = actress.strip()
+        if actress:  # 只保留非空的演员名字
+            cleaned_actresses.append(actress)
+    
+    # 如果有多个演员，用空格连接；如果只有一个或没有，直接返回
+    if len(cleaned_actresses) > 1:
+        return ' '.join(cleaned_actresses)
+    elif len(cleaned_actresses) == 1:
+        return cleaned_actresses[0]
+    else:
+        return girl_text
+
+
+def convert_traditional_to_simplified(text):
+    """
+    将繁体字转换为简体字
+    
+    参数:
+        text (str): 需要转换的文本
+        
+    返回:
+        str: 转换后的简体字文本
+    """
+    if not text:
+        return text
+    
+    # 使用 zhconv 库进行繁简转换
+    try:
+        return zhconv.convert(text, 'zh-cn')
+    except Exception as e:
+        print(f"繁简转换失败: {e}")
+        return text
+
+
+def format_chinese_english_spacing(text):
+    """
+    在中文和英文字符之间添加空格
+    
+    参数:
+        text (str): 需要处理的文本
+        
+    返回:
+        str: 处理后的文本
+    """
+    if not text:
+        return text
+    
+    # 在中文字符和英文字符之间添加空格
+    # 中文字符后跟英文字符
+    text = re.sub(r'([\u4e00-\u9fa5])([a-zA-Z0-9])', r'\1 \2', text)
+    # 英文字符后跟中文字符
+    text = re.sub(r'([a-zA-Z0-9])([\u4e00-\u9fa5])', r'\1 \2', text)
+    
+    return text
 
 
 def generate_nfo_file(result_data, nfo_path):
@@ -516,7 +619,8 @@ def process_directory(directory_path="./downloaded", save_directory="./downloade
             
             # 从文件名中提取番号
             jav_id = extract_jav_id_from_filename(file)
-            
+            if '-' not in jav_id:
+                jav_id = re.sub(r'([A-Z]+)([0-9]+)', r'\1-\2', jav_id)
             if jav_id and jav_id not in processed_ids:
                 print(f"\n 处理文件: {file}")
                 print(f"提取到番号: {jav_id}")

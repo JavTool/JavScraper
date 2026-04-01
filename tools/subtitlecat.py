@@ -260,5 +260,5 @@ if __name__ == "__main__":
     # 运行示例
     downloader = SubtitleCat()
     # 指定要遍历的根目录
-    root_dir = r"\\192.168.1.199\Porn\Uncensored"
+    root_dir = r"F:\111\222"
     downloader.batch_download_missing_subtitles(root_dir)
