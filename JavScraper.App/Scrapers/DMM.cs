@@ -1,4 +1,5 @@
-﻿using JavScraper.App.Entities;
+﻿using HtmlAgilityPack;
+using JavScraper.App.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace JavScraper.App.Scrapers
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public override bool CheckKeyword(string key) => JavIdRecognizer.FC2(key) == null;
+        public override bool CheckKeyword(string key) => JavRecognizer.FC2(key) == null;
 
 
         public override Task<List<JavVideo>> ParseList(string url)
@@ -105,6 +106,27 @@ namespace JavScraper.App.Scrapers
                 video.Title = video.Title[video.Number.Length..].Trim();
 
             return video;
+        }
+
+        public override Task<List<JavVideo>> ParseList(List<JavVideo> ls, HtmlDocument doc)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<JavVideo> SearchAndParseJavVideo(string javId)
+        {
+            var searchUrl = $"https://www.dmm.co.jp/mono/dvd/-/search/=/searchstr={javId}/";
+            var doc = await GetHtmlDocumentAsync(searchUrl);
+            if (doc == null)
+                return null;
+
+            var videoNode = doc.DocumentNode.SelectSingleNode("//p[contains(@class,'tmb')]/a");
+            if (videoNode == null)
+                return null;
+
+            var videoUrl = videoNode.GetAttributeValue("href", null);
+            var javVideo = await ParsePage(videoUrl);
+            return javVideo;
         }
     }
 }

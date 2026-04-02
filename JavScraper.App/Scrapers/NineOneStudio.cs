@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace JavScraper.App.Scrapers
 {
@@ -11,7 +12,7 @@ namespace JavScraper.App.Scrapers
     {
 
 
-        public static void ScraperDetailList(string savePath)
+        public static async Task ScraperDetailList(string savePath)
         {
             string baseUrl = "https://91mv.org";
 
@@ -37,7 +38,7 @@ namespace JavScraper.App.Scrapers
                 if (!Directory.Exists(descDir))
                 {
                     Directory.CreateDirectory(descDir);
-                    var saveFileName = Downloader.Download(imageUrl, descDir, videoId);
+                    var saveFileName = await Downloader.DownloadAsync(imageUrl, descDir, videoId);
                     var posterFileName = string.Format("{0}/{1}{2}", descDir, "poster", ".jpg");
                     ImageUtils.ConvertImage(saveFileName, posterFileName);
                     var fanartFileName = string.Format("{0}/{1}{2}", descDir, "fanart", ".jpg");
@@ -103,7 +104,7 @@ namespace JavScraper.App.Scrapers
         }
 
 
-        public static void ScraperList(string savePath)
+        public static async Task ScraperList(string savePath)
         {
             string baseUrl = "https://91mv.org";
 
@@ -133,7 +134,7 @@ namespace JavScraper.App.Scrapers
                     if (!Directory.Exists(descDir))
                     {
                         Directory.CreateDirectory(descDir);
-                        var saveFileName = Downloader.Download(imageUrl, descDir, videoId);
+                        var saveFileName = await Downloader.DownloadAsync(imageUrl, descDir, videoId);
                         var posterFileName = string.Format("{0}/{1}{2}", descDir, "poster", ".jpg");
                         ImageUtils.ConvertImage(saveFileName, posterFileName);
                         var fanartFileName = string.Format("{0}/{1}{2}", descDir, "fanart", ".jpg");

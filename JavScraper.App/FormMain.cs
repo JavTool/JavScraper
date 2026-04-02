@@ -21,6 +21,7 @@ using Image = System.Drawing.Image;
 using static JavScraper.App.ImageUtils;
 using JavScraper.App.Models;
 using JavScraper.App.Services;
+using JavScraper.App.Configuration;
 
 namespace JavScraper.App
 {

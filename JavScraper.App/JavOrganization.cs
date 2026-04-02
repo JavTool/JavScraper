@@ -1,4 +1,4 @@
-﻿using JavScraper.App.Entities;
+﻿using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -181,7 +181,7 @@ namespace JavScraper.App
                             DirectoryInfo dirInfo = new DirectoryInfo(javFile.Key);
                             var fileDir = dirInfo.Parent.FullName;
 
-                            var saveFileName = Downloader.Download(coverUrl, fileDir, javId);
+                            var saveFileName = await Downloader.DownloadAsync(coverUrl, fileDir, javId);
                             var posterFileName = string.Format("{0}/{1}{2}", fileDir, "poster", ".jpg");
                             if (javId.Type != JavIdType.Uncensored && javId.Matcher != "OnlyNumber")
                             {
@@ -208,7 +208,7 @@ namespace JavScraper.App
                                     {
                                         sampleUrl = string.Format("https://www.javbus.com/{0}", sampleUrl);
                                     }
-                                    var saveName = Downloader.Download(sampleUrl, fileDir, string.Format("Sample-{0}", (i + 1).ToString().PadLeft(3, '0')));
+                                    var saveName = Downloader.DownloadAsync(sampleUrl, fileDir, string.Format("Sample-{0}", (i + 1).ToString().PadLeft(3, '0')));
                                     Console.WriteLine(saveName);
                                 }
                             }
@@ -254,7 +254,7 @@ namespace JavScraper.App
                                 DirectoryInfo dirInfo = new DirectoryInfo(javFile.Key);
                                 var fileDir = dirInfo.Parent.FullName;
 
-                                var saveFileName = Downloader.Download(coverUrl, fileDir, javId);
+                                var saveFileName = await Downloader.DownloadAsync(coverUrl, fileDir, javId);
                                 var posterFileName = string.Format("{0}/{1}{2}", fileDir, "poster", ".jpg");
                                 if (javId.Type != JavIdType.Uncensored && javId.Matcher != "OnlyNumber")
                                 {
@@ -277,7 +277,7 @@ namespace JavScraper.App
                                     {
                                         if (Regex.IsMatch(sample, urlRegex))
                                         {
-                                            var saveName = Downloader.Download(sample, fileDir, string.Format("sample-{0}", (i + 1).ToString().PadLeft(3, '0')));
+                                            var saveName = Downloader.DownloadAsync(sample, fileDir, string.Format("sample-{0}", (i + 1).ToString().PadLeft(3, '0')));
                                             i++;
                                             Console.WriteLine("{0}：--->已下载文件 {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), saveName);
                                         }
@@ -370,15 +370,6 @@ namespace JavScraper.App
             }
         }
 
-        private static ILoggerFactory CreateLoggerFactory()
-        {
-            return LoggerFactory.Create(builder =>
-            {
-                builder
-                    .AddConsole()
-                    .AddDebug()
-                    .SetMinimumLevel(LogLevel.Information);
-            });
-        }
+
     }
 }

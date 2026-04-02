@@ -1,5 +1,6 @@
-using JavScraper.Tools.Entities;
-using JavScraper.Tools.Scrapers;
+using JavScraper.App.Models;
+using JavScraper.App.Scrapers;
+using JavScraper.App.Scrapers.Uncensored;
 using JavScraper.Tools.Scrapers.Uncensored;
 using Microsoft.Extensions.Logging;
 using System;
@@ -7,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Services
+namespace JavScraper.App.Services
 {
     /// <summary>
     /// 多刮削器服务，支持从多个数据源获取视频信息并选择最佳结果

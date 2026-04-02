@@ -1,4 +1,4 @@
-﻿using JavScraper.App.Entities;
+﻿using JavScraper.App.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;

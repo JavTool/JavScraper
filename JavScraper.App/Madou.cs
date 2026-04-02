@@ -1,4 +1,4 @@
-﻿using JavScraper.App.Entities;
+﻿using JavScraper.App.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

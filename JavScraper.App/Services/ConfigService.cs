@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Windows.Forms;
-using JavScraper.App.Models;
+using JavScraper.App.Configuration;
 
 namespace JavScraper.App.Services
 {

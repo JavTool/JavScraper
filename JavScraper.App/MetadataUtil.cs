@@ -1,4 +1,4 @@
-﻿using JavScraper.App.Entities;
+﻿using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -38,71 +38,7 @@ namespace JavScraper.App
             }
         }
 
-        private static async Task FixMetadataAsync(ILoggerFactory loggerFactory, string path)
-        {
-            var logger = loggerFactory.CreateLogger<MetadataUtil>();
-            var javFiles = new Dictionary<string, string>();
-            Director(path, javFiles);
-
-            foreach (var javFile in javFiles)
-            {
-                var fileExt = Path.GetExtension(javFile.Key);
-                if (fileExt.ToLower().Contains(".nfo") && !javFile.Key.Contains(".bak.nfo"))
-                {
-                    var fileInfo = new FileInfo(javFile.Key);
-                    if (File.GetAttributes(javFile.Key).HasFlag(FileAttributes.Hidden))
-                    {
-                        LogAndPrint(logger, HiddenFileLog);
-                        continue;
-                    }
-
-                    var destFileName = $"{fileInfo.DirectoryName}\\{Path.GetFileNameWithoutExtension(javFile.Key)}.bak{fileInfo.Extension}";
-                    if (File.Exists(destFileName))
-                    {
-                        LogAndPrint(logger, AlreadyFixedLog);
-                        continue;
-                    }
-
-                    fileInfo.CopyTo(destFileName);
-
-                    var nfoManager = new NfoDocument(javFile.Key);
-                    if (string.IsNullOrEmpty(nfoManager.ToString()))
-                    {
-                        Console.WriteLine(string.Format(MetadataErrorLog, javFile.Key));
-                        continue;
-                    }
-
-                    var (title, sortTitle, originalTitle, genres, tags) = GetNfoMetadata(nfoManager);
-
-                    Console.WriteLine("修正前的元数据:");
-                    PrintMetadata(javFile.Value, title, originalTitle, sortTitle, tags, genres);
-
-                    var javId = GetJavId(sortTitle, originalTitle, title);
-                    if (javId == null)
-                    {
-                        LogAndPrint(logger, string.Format(MetadataErrorLog, javFile.Key));
-                        continue;
-                    }
-
-                    var javVideo = await GetJavVideoAsync(loggerFactory, javId);
-                    if (javVideo == null)
-                    {
-                        Console.WriteLine(string.Format(MetadataErrorLog, javFile.Key));
-                        continue;
-                    }
-
-                    var (videoTitle, videoOriginalTitle, videoSortTitle, isChinese) = FixVideoMetadata(javId.Id.ToUpper(), javVideo, title, originalTitle, tags, genres);
-
-                    nfoManager.SaveMetadata(videoTitle, videoOriginalTitle, videoSortTitle, genres, tags);
-                    FixActors(fileInfo, nfoManager, javVideo);
-
-                    Console.WriteLine("修正后的元数据:");
-                    PrintMetadata(javId.Id.ToUpper(), videoTitle, videoOriginalTitle, videoSortTitle, tags, genres);
-                    Console.WriteLine("==============================================");
-                }
-            }
-        }
-
+     
         private static void LogAndPrint(ILogger logger, string message)
         {
             logger.LogInformation(message);

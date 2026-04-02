@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace JavScraper.App.Entities
+namespace JavScraper.App.Models
 {
     /// <summary>
     /// 视频
@@ -17,6 +17,8 @@ namespace JavScraper.App.Entities
         public JavVideo()
         {
             Samples = new List<string>();
+            Tags = new List<string>();
+            Genres = new List<string>();
         }
 
         /// <summary>
@@ -62,6 +64,11 @@ namespace JavScraper.App.Entities
         /// <summary>
         /// 类别
         /// </summary>
+        public List<string> Tags { get; set; }
+
+        /// <summary>
+        /// 类别
+        /// </summary>
         public List<string> Genres { get; set; }
 
         /// <summary>
@@ -78,6 +85,45 @@ namespace JavScraper.App.Entities
         /// %genre:中文字幕?中文:%
         /// </summary>
         private static readonly Regex regex_genre = new Regex("%genre:(?<a>[^?]+)?(?<b>[^:]*):(?<c>[^%]*)%", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        /// <summary>
+        /// 地址
+        /// </summary>
+        public string Url { get; set; }
+
+        /// <summary>
+        /// 番号
+        /// </summary>
+        public string Number { get; set; }
+
+        /// <summary>
+        /// 标题
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// 标题
+        /// </summary>
+        public string SortTitle { get; set; }
+
+        /// <summary>
+        /// 封面
+        /// </summary>
+        public string Cover { get; set; }
+
+        /// <summary>
+        /// Jellyfin 主封面（竖版）（fanart.jpg）
+        /// </summary>
+        public string Poster { get; set; }
+
+        /// <summary>
+        /// Jellyfin 背景图（fanart.jpg）
+        /// </summary>
+        public string Fanart { get; set; }
+
+        /// <summary>
+        /// 日期
+        /// </summary>
+        public string Date { get; set; }
 
         /// <summary>
         /// 获取格式化文件名
@@ -146,31 +192,6 @@ namespace JavScraper.App.Entities
 
             return format;
         }
-
-        /// <summary>
-        /// 地址
-        /// </summary>
-        public string Url { get; set; }
-
-        /// <summary>
-        /// 番号
-        /// </summary>
-        public string Number { get; set; }
-
-        /// <summary>
-        /// 标题
-        /// </summary>
-        public string Title { get; set; }
-
-        /// <summary>
-        /// 封面
-        /// </summary>
-        public string Cover { get; set; }
-
-        /// <summary>
-        /// 日期
-        /// </summary>
-        public string Date { get; set; }
 
         /// <summary>
         /// 转换为字符串

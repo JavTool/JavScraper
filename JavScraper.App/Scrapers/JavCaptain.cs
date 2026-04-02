@@ -1,5 +1,5 @@
 ﻿using HtmlAgilityPack;
-using JavScraper.App.Entities;
+using JavScraper.App.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -33,7 +33,7 @@ namespace JavScraper.App.Scrapers
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public override bool CheckKeyword(string key) => JavIdRecognizer.Western(key) != null;
+        public override bool CheckKeyword(string key) => JavRecognizer.Western(key) != null;
 
         public override async Task<List<JavVideo>> ParseList(string url)
         {
@@ -298,6 +298,11 @@ namespace JavScraper.App.Scrapers
 
             SortIndex(number, ls);
             return ls;
+        }
+
+        public override Task<List<JavVideo>> ParseList(List<JavVideo> ls, HtmlDocument doc)
+        {
+            throw new NotImplementedException();
         }
     }
 }

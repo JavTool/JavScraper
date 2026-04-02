@@ -344,7 +344,7 @@ namespace JavScraper.Tools
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private static JavId Western(string name)
+        public static JavId Western(string name)
         {
             var m = regexWestern.Match(name);
             if (m.Success == false)
@@ -352,7 +352,7 @@ namespace JavScraper.Tools
             var id = m.Groups["id"].Value;
             return new JavId()
             {
-                Matcher = nameof(OnlyNumber),
+                Matcher = nameof(Western),
                 Id = id
             };
         }

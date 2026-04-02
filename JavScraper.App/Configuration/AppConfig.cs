@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JavScraper.App.Models
+namespace JavScraper.App.Configuration
 {
     /// <summary>
     /// 程序配置类，用于存储和管理应用程序的配置信息。
