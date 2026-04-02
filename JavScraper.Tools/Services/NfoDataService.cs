@@ -225,7 +225,7 @@ namespace JavScraper.Tools.Services
         /// <summary>
         /// 提取 JAV ID。
         /// </summary>
-        private string ExtractJavId(JavVideo nfoVideoInfo, string nfoFilePath)
+        private static string ExtractJavId(JavVideo nfoVideoInfo, string nfoFilePath)
         {
             // 从 NFO 中提取
             if (!string.IsNullOrEmpty(nfoVideoInfo.Number))
@@ -241,7 +241,7 @@ namespace JavScraper.Tools.Services
         /// <summary>
         /// 从内容中提取 JAV ID。
         /// </summary>
-        private string ExtractJavIdFromContent(string nfoContent, string nfoFilePath)
+        private static string ExtractJavIdFromContent(string nfoContent, string nfoFilePath)
         {
             // 从 NFO 内容中提取
             var javId = JavIdExtractor.ExtractJavIdFromNfoContent(nfoContent);
@@ -258,7 +258,7 @@ namespace JavScraper.Tools.Services
         /// <summary>
         /// 检查是否有字幕文件。
         /// </summary>
-        private bool CheckForSubtitles(string directoryPath)
+        private static bool CheckForSubtitles(string directoryPath)
         {
             if (string.IsNullOrEmpty(directoryPath) || !Directory.Exists(directoryPath))
             {
@@ -272,7 +272,7 @@ namespace JavScraper.Tools.Services
         /// <summary>
         /// 处理标题。
         /// </summary>
-        private TitleProcessResult ProcessTitle(VideoInfo videoInfo, bool hasSubtitles, string directoryPath)
+        private static TitleProcessResult ProcessTitle(VideoInfo videoInfo, bool hasSubtitles, string directoryPath)
         {
             var result = new TitleProcessResult
             {

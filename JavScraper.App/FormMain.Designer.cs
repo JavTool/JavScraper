@@ -48,13 +48,13 @@ namespace JavScraper.App
             label2 = new Label();
             label1 = new Label();
             richTextBox1 = new RichTextBox();
-            textBoxNamingPreviewMultiple = new TextBox();
-            textBoxNamingRuleMultiple = new TextBox();
+            textBoxMultipleNamingPreview = new TextBox();
+            textBoxMultipleNamingRule = new TextBox();
             textBoxNamingPreview = new TextBox();
             textBoxNamingRule = new TextBox();
-            txtFailedOutputDir = new TextBox();
-            txtSuccessfulOutputDir = new TextBox();
-            txtInputDir = new TextBox();
+            txtFailedOutputFolder = new TextBox();
+            txtSuccessfulOutputFolder = new TextBox();
+            txtInputFolder = new TextBox();
             btnTest = new Button();
             btnStop = new Button();
             btnStart = new Button();
@@ -71,10 +71,14 @@ namespace JavScraper.App
             tabPageCropImage = new TabPage();
             mainTablePanel = new TableLayoutPanel();
             controlPanel = new TableLayoutPanel();
+            trackBarWidth = new TrackBar();
+            label15 = new Label();
+            label14 = new Label();
             labelCropMode = new Label();
-            comboBoxCropMode = new ComboBox();
             label9 = new Label();
             comboBoxCoverType = new ComboBox();
+            comboBoxCropMode = new ComboBox();
+            trackBarScroll = new TrackBar();
             previewPanel = new TableLayoutPanel();
             pictureBoxBackdrop = new PictureBox();
             pictureBoxFanart = new PictureBox();
@@ -83,6 +87,22 @@ namespace JavScraper.App
             buttonPanel = new TableLayoutPanel();
             button3 = new Button();
             button1 = new Button();
+            tabPageDownloadMeta = new TabPage();
+            tableLayoutPanel1 = new TableLayoutPanel();
+            tableLayoutPanel2 = new TableLayoutPanel();
+            label12 = new Label();
+            label13 = new Label();
+            comboBox2 = new ComboBox();
+            textBox2 = new TextBox();
+            buttonDown = new Button();
+            tableLayoutPanel3 = new TableLayoutPanel();
+            pictureBox1 = new PictureBox();
+            pictureBox2 = new PictureBox();
+            pictureBox3 = new PictureBox();
+            pictureBox4 = new PictureBox();
+            tableLayoutPanel4 = new TableLayoutPanel();
+            button9 = new Button();
+            button10 = new Button();
             labelCoverType = new Label();
             selectButton = new Button();
             cropButton = new Button();
@@ -98,6 +118,7 @@ namespace JavScraper.App
             optionToolStripMenuItem = new ToolStripMenuItem();
             helpToolStripMenuItem = new ToolStripMenuItem();
             statusStrip = new StatusStrip();
+            toolStripStatusLabelScroll = new ToolStripStatusLabel();
             labelPoster = new Label();
             labelThumb = new Label();
             labelBackdrop = new Label();
@@ -108,17 +129,29 @@ namespace JavScraper.App
             tabPageCropImage.SuspendLayout();
             mainTablePanel.SuspendLayout();
             controlPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBarWidth).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarScroll).BeginInit();
             previewPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxBackdrop).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxFanart).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxPoster).BeginInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxThumb).BeginInit();
             buttonPanel.SuspendLayout();
+            tabPageDownloadMeta.SuspendLayout();
+            tableLayoutPanel1.SuspendLayout();
+            tableLayoutPanel2.SuspendLayout();
+            tableLayoutPanel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox4).BeginInit();
+            tableLayoutPanel4.SuspendLayout();
             topPanel.SuspendLayout();
             bottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)previewBox).BeginInit();
             dropPanel.SuspendLayout();
             menuStrip.SuspendLayout();
+            statusStrip.SuspendLayout();
             SuspendLayout();
             // 
             // tabControlMain
@@ -128,6 +161,7 @@ namespace JavScraper.App
             tabControlMain.Controls.Add(tabPageOrganizingMode);
             tabControlMain.Controls.Add(tabPageFixMetadata);
             tabControlMain.Controls.Add(tabPageCropImage);
+            tabControlMain.Controls.Add(tabPageDownloadMeta);
             tabControlMain.Location = new Point(2, 28);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
@@ -150,13 +184,13 @@ namespace JavScraper.App
             tabPageMain.Controls.Add(label2);
             tabPageMain.Controls.Add(label1);
             tabPageMain.Controls.Add(richTextBox1);
-            tabPageMain.Controls.Add(textBoxNamingPreviewMultiple);
-            tabPageMain.Controls.Add(textBoxNamingRuleMultiple);
+            tabPageMain.Controls.Add(textBoxMultipleNamingPreview);
+            tabPageMain.Controls.Add(textBoxMultipleNamingRule);
             tabPageMain.Controls.Add(textBoxNamingPreview);
             tabPageMain.Controls.Add(textBoxNamingRule);
-            tabPageMain.Controls.Add(txtFailedOutputDir);
-            tabPageMain.Controls.Add(txtSuccessfulOutputDir);
-            tabPageMain.Controls.Add(txtInputDir);
+            tabPageMain.Controls.Add(txtFailedOutputFolder);
+            tabPageMain.Controls.Add(txtSuccessfulOutputFolder);
+            tabPageMain.Controls.Add(txtInputFolder);
             tabPageMain.Controls.Add(btnTest);
             tabPageMain.Controls.Add(btnStop);
             tabPageMain.Controls.Add(btnStart);
@@ -303,22 +337,22 @@ namespace JavScraper.App
             richTextBox1.TabIndex = 4;
             richTextBox1.Text = "";
             // 
-            // textBoxNamingPreviewMultiple
+            // textBoxMultipleNamingPreview
             // 
-            textBoxNamingPreviewMultiple.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBoxNamingPreviewMultiple.Location = new Point(124, 219);
-            textBoxNamingPreviewMultiple.Name = "textBoxNamingPreviewMultiple";
-            textBoxNamingPreviewMultiple.ReadOnly = true;
-            textBoxNamingPreviewMultiple.Size = new Size(804, 23);
-            textBoxNamingPreviewMultiple.TabIndex = 3;
+            textBoxMultipleNamingPreview.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            textBoxMultipleNamingPreview.Location = new Point(124, 219);
+            textBoxMultipleNamingPreview.Name = "textBoxMultipleNamingPreview";
+            textBoxMultipleNamingPreview.ReadOnly = true;
+            textBoxMultipleNamingPreview.Size = new Size(804, 23);
+            textBoxMultipleNamingPreview.TabIndex = 3;
             // 
-            // textBoxNamingRuleMultiple
+            // textBoxMultipleNamingRule
             // 
-            textBoxNamingRuleMultiple.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            textBoxNamingRuleMultiple.Location = new Point(124, 188);
-            textBoxNamingRuleMultiple.Name = "textBoxNamingRuleMultiple";
-            textBoxNamingRuleMultiple.Size = new Size(748, 23);
-            textBoxNamingRuleMultiple.TabIndex = 3;
+            textBoxMultipleNamingRule.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            textBoxMultipleNamingRule.Location = new Point(124, 188);
+            textBoxMultipleNamingRule.Name = "textBoxMultipleNamingRule";
+            textBoxMultipleNamingRule.Size = new Size(748, 23);
+            textBoxMultipleNamingRule.TabIndex = 3;
             // 
             // textBoxNamingPreview
             // 
@@ -331,35 +365,35 @@ namespace JavScraper.App
             // 
             // textBoxNamingRule
             // 
-            textBoxNamingRule.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            textBoxNamingRule.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             textBoxNamingRule.Location = new Point(124, 129);
             textBoxNamingRule.Name = "textBoxNamingRule";
             textBoxNamingRule.Size = new Size(748, 23);
             textBoxNamingRule.TabIndex = 3;
             // 
-            // txtFailedOutputDir
+            // txtFailedOutputFolder
             // 
-            txtFailedOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtFailedOutputDir.Location = new Point(124, 100);
-            txtFailedOutputDir.Name = "txtFailedOutputDir";
-            txtFailedOutputDir.Size = new Size(748, 23);
-            txtFailedOutputDir.TabIndex = 3;
+            txtFailedOutputFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtFailedOutputFolder.Location = new Point(124, 100);
+            txtFailedOutputFolder.Name = "txtFailedOutputFolder";
+            txtFailedOutputFolder.Size = new Size(748, 23);
+            txtFailedOutputFolder.TabIndex = 3;
             // 
-            // txtSuccessfulOutputDir
+            // txtSuccessfulOutputFolder
             // 
-            txtSuccessfulOutputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtSuccessfulOutputDir.Location = new Point(124, 71);
-            txtSuccessfulOutputDir.Name = "txtSuccessfulOutputDir";
-            txtSuccessfulOutputDir.Size = new Size(748, 23);
-            txtSuccessfulOutputDir.TabIndex = 3;
+            txtSuccessfulOutputFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSuccessfulOutputFolder.Location = new Point(124, 71);
+            txtSuccessfulOutputFolder.Name = "txtSuccessfulOutputFolder";
+            txtSuccessfulOutputFolder.Size = new Size(748, 23);
+            txtSuccessfulOutputFolder.TabIndex = 3;
             // 
-            // txtInputDir
+            // txtInputFolder
             // 
-            txtInputDir.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtInputDir.Location = new Point(124, 42);
-            txtInputDir.Name = "txtInputDir";
-            txtInputDir.Size = new Size(748, 23);
-            txtInputDir.TabIndex = 3;
+            txtInputFolder.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtInputFolder.Location = new Point(124, 42);
+            txtInputFolder.Name = "txtInputFolder";
+            txtInputFolder.Size = new Size(748, 23);
+            txtInputFolder.TabIndex = 3;
             // 
             // btnTest
             // 
@@ -530,15 +564,23 @@ namespace JavScraper.App
             // 
             // controlPanel
             // 
-            controlPanel.ColumnCount = 4;
+            controlPanel.ColumnCount = 8;
+            controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
+            controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
             controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
             controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
             controlPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
             controlPanel.ColumnStyles.Add(new ColumnStyle());
+            controlPanel.Controls.Add(trackBarWidth, 7, 0);
+            controlPanel.Controls.Add(label15, 6, 0);
+            controlPanel.Controls.Add(label14, 4, 0);
             controlPanel.Controls.Add(labelCropMode, 2, 0);
-            controlPanel.Controls.Add(comboBoxCropMode, 3, 0);
             controlPanel.Controls.Add(label9, 0, 0);
             controlPanel.Controls.Add(comboBoxCoverType, 1, 0);
+            controlPanel.Controls.Add(comboBoxCropMode, 3, 0);
+            controlPanel.Controls.Add(trackBarScroll, 5, 0);
             controlPanel.Dock = DockStyle.Fill;
             controlPanel.Location = new Point(8, 8);
             controlPanel.Name = "controlPanel";
@@ -546,6 +588,38 @@ namespace JavScraper.App
             controlPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             controlPanel.Size = new Size(900, 29);
             controlPanel.TabIndex = 0;
+            // 
+            // trackBarWidth
+            // 
+            trackBarWidth.BackColor = Color.WhiteSmoke;
+            trackBarWidth.Location = new Point(743, 3);
+            trackBarWidth.Maximum = 100;
+            trackBarWidth.Name = "trackBarWidth";
+            trackBarWidth.Size = new Size(134, 23);
+            trackBarWidth.TabIndex = 9;
+            trackBarWidth.Scroll += trackBarWidth_Scroll;
+            // 
+            // label15
+            // 
+            label15.Anchor = AnchorStyles.Left;
+            label15.AutoSize = true;
+            label15.Location = new Point(663, 6);
+            label15.Name = "label15";
+            label15.Size = new Size(68, 17);
+            label15.TabIndex = 8;
+            label15.Text = "裁切宽度：";
+            label15.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // label14
+            // 
+            label14.Anchor = AnchorStyles.Left;
+            label14.AutoSize = true;
+            label14.Location = new Point(443, 6);
+            label14.Name = "label14";
+            label14.Size = new Size(68, 17);
+            label14.TabIndex = 7;
+            label14.Text = "手动裁切：";
+            label14.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // labelCropMode
             // 
@@ -557,16 +631,6 @@ namespace JavScraper.App
             labelCropMode.TabIndex = 2;
             labelCropMode.Text = "裁切方式：";
             labelCropMode.TextAlign = ContentAlignment.MiddleCenter;
-            // 
-            // comboBoxCropMode
-            // 
-            comboBoxCropMode.Anchor = AnchorStyles.Left;
-            comboBoxCropMode.DropDownStyle = ComboBoxStyle.DropDownList;
-            comboBoxCropMode.Items.AddRange(new object[] { "右侧", "中间", "左侧" });
-            comboBoxCropMode.Location = new Point(303, 3);
-            comboBoxCropMode.Name = "comboBoxCropMode";
-            comboBoxCropMode.Size = new Size(120, 25);
-            comboBoxCropMode.TabIndex = 3;
             // 
             // label9
             // 
@@ -589,6 +653,26 @@ namespace JavScraper.App
             comboBoxCoverType.Name = "comboBoxCoverType";
             comboBoxCoverType.Size = new Size(120, 25);
             comboBoxCoverType.TabIndex = 5;
+            // 
+            // comboBoxCropMode
+            // 
+            comboBoxCropMode.Anchor = AnchorStyles.Left;
+            comboBoxCropMode.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxCropMode.Items.AddRange(new object[] { "右侧", "中间", "左侧" });
+            comboBoxCropMode.Location = new Point(303, 3);
+            comboBoxCropMode.Name = "comboBoxCropMode";
+            comboBoxCropMode.Size = new Size(120, 25);
+            comboBoxCropMode.TabIndex = 3;
+            // 
+            // trackBarScroll
+            // 
+            trackBarScroll.BackColor = Color.WhiteSmoke;
+            trackBarScroll.Location = new Point(523, 3);
+            trackBarScroll.Maximum = 100;
+            trackBarScroll.Name = "trackBarScroll";
+            trackBarScroll.Size = new Size(134, 23);
+            trackBarScroll.TabIndex = 6;
+            trackBarScroll.Scroll += trackBarScroll_Scroll;
             // 
             // previewPanel
             // 
@@ -687,6 +771,201 @@ namespace JavScraper.App
             button1.Text = "裁切封面";
             button1.UseVisualStyleBackColor = true;
             button1.Click += CropButton_Click;
+            // 
+            // tabPageDownloadMeta
+            // 
+            tabPageDownloadMeta.Controls.Add(tableLayoutPanel1);
+            tabPageDownloadMeta.Location = new Point(4, 26);
+            tabPageDownloadMeta.Name = "tabPageDownloadMeta";
+            tabPageDownloadMeta.Padding = new Padding(3);
+            tabPageDownloadMeta.Size = new Size(936, 480);
+            tabPageDownloadMeta.TabIndex = 4;
+            tabPageDownloadMeta.Text = "下载数据";
+            tabPageDownloadMeta.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel1
+            // 
+            tableLayoutPanel1.ColumnCount = 1;
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 0, 0);
+            tableLayoutPanel1.Controls.Add(tableLayoutPanel3, 0, 1);
+            tableLayoutPanel1.Controls.Add(tableLayoutPanel4, 0, 2);
+            tableLayoutPanel1.Dock = DockStyle.Fill;
+            tableLayoutPanel1.Location = new Point(3, 3);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
+            tableLayoutPanel1.Padding = new Padding(5);
+            tableLayoutPanel1.RowCount = 3;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 35F));
+            tableLayoutPanel1.Size = new Size(930, 474);
+            tableLayoutPanel1.TabIndex = 1;
+            // 
+            // tableLayoutPanel2
+            // 
+            tableLayoutPanel2.ColumnCount = 5;
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle());
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
+            tableLayoutPanel2.Controls.Add(label12, 2, 0);
+            tableLayoutPanel2.Controls.Add(label13, 0, 0);
+            tableLayoutPanel2.Controls.Add(comboBox2, 1, 0);
+            tableLayoutPanel2.Controls.Add(textBox2, 3, 0);
+            tableLayoutPanel2.Controls.Add(buttonDown, 4, 0);
+            tableLayoutPanel2.Dock = DockStyle.Fill;
+            tableLayoutPanel2.Location = new Point(8, 8);
+            tableLayoutPanel2.Name = "tableLayoutPanel2";
+            tableLayoutPanel2.RowCount = 1;
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.Size = new Size(914, 29);
+            tableLayoutPanel2.TabIndex = 0;
+            // 
+            // label12
+            // 
+            label12.Anchor = AnchorStyles.Left;
+            label12.AutoSize = true;
+            label12.Location = new Point(223, 6);
+            label12.Name = "label12";
+            label12.Size = new Size(68, 17);
+            label12.TabIndex = 2;
+            label12.Text = "影片番号：";
+            label12.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // label13
+            // 
+            label13.Anchor = AnchorStyles.Left;
+            label13.AutoSize = true;
+            label13.Location = new Point(3, 6);
+            label13.Name = "label13";
+            label13.Size = new Size(68, 17);
+            label13.TabIndex = 4;
+            label13.Text = "影片类型：";
+            label13.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // comboBox2
+            // 
+            comboBox2.Anchor = AnchorStyles.Left;
+            comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBox2.FormattingEnabled = true;
+            comboBox2.Items.AddRange(new object[] { "有码影片", "无码影片", "流出影片" });
+            comboBox2.Location = new Point(83, 3);
+            comboBox2.Name = "comboBox2";
+            comboBox2.Size = new Size(120, 25);
+            comboBox2.TabIndex = 5;
+            // 
+            // textBox2
+            // 
+            textBox2.Location = new Point(303, 3);
+            textBox2.Name = "textBox2";
+            textBox2.Size = new Size(120, 23);
+            textBox2.TabIndex = 6;
+            // 
+            // buttonDown
+            // 
+            buttonDown.Location = new Point(429, 3);
+            buttonDown.Name = "buttonDown";
+            buttonDown.Size = new Size(75, 23);
+            buttonDown.TabIndex = 7;
+            buttonDown.Text = "下载数据";
+            buttonDown.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanel3
+            // 
+            tableLayoutPanel3.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tableLayoutPanel3.BackColor = Color.LightGray;
+            tableLayoutPanel3.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            tableLayoutPanel3.ColumnCount = 2;
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.Controls.Add(pictureBox1, 0, 0);
+            tableLayoutPanel3.Controls.Add(pictureBox2, 1, 0);
+            tableLayoutPanel3.Controls.Add(pictureBox3, 0, 1);
+            tableLayoutPanel3.Controls.Add(pictureBox4, 1, 1);
+            tableLayoutPanel3.Location = new Point(8, 43);
+            tableLayoutPanel3.Name = "tableLayoutPanel3";
+            tableLayoutPanel3.RowCount = 2;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.Size = new Size(914, 388);
+            tableLayoutPanel3.TabIndex = 1;
+            // 
+            // pictureBox1
+            // 
+            pictureBox1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            pictureBox1.Location = new Point(4, 4);
+            pictureBox1.Name = "pictureBox1";
+            pictureBox1.Size = new Size(449, 186);
+            pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox1.TabIndex = 0;
+            pictureBox1.TabStop = false;
+            // 
+            // pictureBox2
+            // 
+            pictureBox2.Dock = DockStyle.Fill;
+            pictureBox2.Location = new Point(460, 4);
+            pictureBox2.Name = "pictureBox2";
+            pictureBox2.Size = new Size(450, 186);
+            pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox2.TabIndex = 1;
+            pictureBox2.TabStop = false;
+            // 
+            // pictureBox3
+            // 
+            pictureBox3.Dock = DockStyle.Fill;
+            pictureBox3.Location = new Point(4, 197);
+            pictureBox3.Name = "pictureBox3";
+            pictureBox3.Size = new Size(449, 187);
+            pictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox3.TabIndex = 2;
+            pictureBox3.TabStop = false;
+            // 
+            // pictureBox4
+            // 
+            pictureBox4.Dock = DockStyle.Fill;
+            pictureBox4.Location = new Point(460, 197);
+            pictureBox4.Name = "pictureBox4";
+            pictureBox4.Size = new Size(450, 187);
+            pictureBox4.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox4.TabIndex = 3;
+            pictureBox4.TabStop = false;
+            // 
+            // tableLayoutPanel4
+            // 
+            tableLayoutPanel4.ColumnCount = 3;
+            tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
+            tableLayoutPanel4.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
+            tableLayoutPanel4.Controls.Add(button9, 1, 0);
+            tableLayoutPanel4.Controls.Add(button10, 2, 0);
+            tableLayoutPanel4.Dock = DockStyle.Fill;
+            tableLayoutPanel4.Location = new Point(8, 437);
+            tableLayoutPanel4.Name = "tableLayoutPanel4";
+            tableLayoutPanel4.RowCount = 1;
+            tableLayoutPanel4.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            tableLayoutPanel4.Size = new Size(914, 29);
+            tableLayoutPanel4.TabIndex = 2;
+            // 
+            // button9
+            // 
+            button9.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            button9.Location = new Point(717, 3);
+            button9.Name = "button9";
+            button9.Size = new Size(94, 25);
+            button9.TabIndex = 1;
+            button9.Text = "选择文件";
+            button9.UseVisualStyleBackColor = true;
+            // 
+            // button10
+            // 
+            button10.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            button10.Location = new Point(817, 3);
+            button10.Name = "button10";
+            button10.Size = new Size(94, 25);
+            button10.TabIndex = 0;
+            button10.Text = "裁切封面";
+            button10.UseVisualStyleBackColor = true;
             // 
             // labelCoverType
             // 
@@ -816,11 +1095,18 @@ namespace JavScraper.App
             // 
             // statusStrip
             // 
+            statusStrip.Items.AddRange(new ToolStripItem[] { toolStripStatusLabelScroll });
             statusStrip.Location = new Point(0, 538);
             statusStrip.Name = "statusStrip";
             statusStrip.Size = new Size(946, 22);
             statusStrip.TabIndex = 2;
             statusStrip.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabelScroll
+            // 
+            toolStripStatusLabelScroll.Name = "toolStripStatusLabelScroll";
+            toolStripStatusLabelScroll.Size = new Size(156, 17);
+            toolStripStatusLabelScroll.Text = "toolStripStatusLabelScroll";
             // 
             // labelPoster
             // 
@@ -884,12 +1170,24 @@ namespace JavScraper.App
             mainTablePanel.ResumeLayout(false);
             controlPanel.ResumeLayout(false);
             controlPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)trackBarWidth).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBarScroll).EndInit();
             previewPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBoxBackdrop).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxFanart).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxPoster).EndInit();
             ((System.ComponentModel.ISupportInitialize)pictureBoxThumb).EndInit();
             buttonPanel.ResumeLayout(false);
+            tabPageDownloadMeta.ResumeLayout(false);
+            tableLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel2.ResumeLayout(false);
+            tableLayoutPanel2.PerformLayout();
+            tableLayoutPanel3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox3).EndInit();
+            ((System.ComponentModel.ISupportInitialize)pictureBox4).EndInit();
+            tableLayoutPanel4.ResumeLayout(false);
             topPanel.ResumeLayout(false);
             topPanel.PerformLayout();
             bottomPanel.ResumeLayout(false);
@@ -898,6 +1196,8 @@ namespace JavScraper.App
             dropPanel.ResumeLayout(false);
             menuStrip.ResumeLayout(false);
             menuStrip.PerformLayout();
+            statusStrip.ResumeLayout(false);
+            statusStrip.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -952,9 +1252,9 @@ namespace JavScraper.App
         private System.Windows.Forms.CheckBox chkDownCover;
         private System.Windows.Forms.TextBox textBoxNamingPreview;
         private System.Windows.Forms.TextBox textBoxNamingRule;
-        private System.Windows.Forms.TextBox txtFailedOutputDir;
-        private System.Windows.Forms.TextBox txtSuccessfulOutputDir;
-        private System.Windows.Forms.TextBox txtInputDir;
+        private System.Windows.Forms.TextBox txtFailedOutputFolder;
+        private System.Windows.Forms.TextBox txtSuccessfulOutputFolder;
+        private System.Windows.Forms.TextBox txtInputFolder;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label5;
@@ -963,14 +1263,14 @@ namespace JavScraper.App
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.TextBox textBoxNamingRuleMultiple;
+        private System.Windows.Forms.TextBox textBoxMultipleNamingRule;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox textBoxNamingPreviewMultiple;
+        private System.Windows.Forms.TextBox textBoxMultipleNamingPreview;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripMenuItem optionToolStripMenuItem;
         private Panel dropPanel;
@@ -1011,6 +1311,27 @@ namespace JavScraper.App
         private TextBox textBox1;
         private Label label11;
         private RichTextBox richTextBox2;
+        private TabPage tabPageDownloadMeta;
+        private TableLayoutPanel tableLayoutPanel1;
+        private TableLayoutPanel tableLayoutPanel2;
+        private Label label12;
+        private Label label13;
+        private ComboBox comboBox2;
+        private TableLayoutPanel tableLayoutPanel3;
+        private PictureBox pictureBox1;
+        private PictureBox pictureBox2;
+        private PictureBox pictureBox3;
+        private PictureBox pictureBox4;
+        private TableLayoutPanel tableLayoutPanel4;
+        private Button button9;
+        private Button button10;
+        private Label label14;
+        private TrackBar trackBarScroll;
+        private ToolStripStatusLabel toolStripStatusLabelScroll;
+        private TextBox textBox2;
+        private Button buttonDown;
+        private TrackBar trackBarWidth;
+        private Label label15;
     }
 }
 

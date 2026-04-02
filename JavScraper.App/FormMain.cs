@@ -9,11 +9,18 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static JavScraper.App.ImageUtils;
 using System.Threading;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Text.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using Image = System.Drawing.Image;
+using static JavScraper.App.ImageUtils;
+using JavScraper.App.Models;
+using JavScraper.App.Services;
 
 namespace JavScraper.App
 {
@@ -39,8 +46,39 @@ namespace JavScraper.App
             // 设置默认值
             comboBoxCoverType.SelectedIndex = 0;  // 默认选择竖版封面(2:3)
             comboBoxCropMode.SelectedIndex = 0;   // 默认选择右侧
+            trackBarWidth.Value = 50;             // 设置宽度调整的默认值为中等
 
+            // 根据裁切方式设置 trackBarScroll 默认值
+            switch (comboBoxCropMode.SelectedIndex)
+            {
+                case 0: // 右侧
+                    trackBarScroll.Value = 100;
+                    break;
+                case 1: // 中间
+                    trackBarScroll.Value = 50;
+                    break;
+                case 2: // 左侧
+                    trackBarScroll.Value = 0;
+                    break;
+            }
             SetupImageCropTab();
+            // 加载保存的配置
+            LoadConfig();
+
+            // 在窗体关闭时保存配置
+            this.FormClosing += FormMain_FormClosing;
+        }
+
+        private void FormMain_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            try
+            {
+                SaveConfig();
+            }
+            catch
+            {
+                // 忽略保存错误
+            }
         }
 
         /// <summary>
@@ -87,7 +125,7 @@ namespace JavScraper.App
                     if (threadStatus[i] == false) // 若有未结束线程，则等待
                     {
                         HasMerge = false;
-                        System.Threading.Thread.Sleep(100);
+                        Thread.Sleep(100);
                         break;
                     }
                 }
@@ -99,12 +137,10 @@ namespace JavScraper.App
             int readSize;
             string downFileNamePath = "";
             byte[] bytes = new byte[bufferSize];
-            FileStream fs = new FileStream(downFileNamePath, FileMode.Create);
-            FileStream fsTmp = null;
-
+            FileStream fs = new(downFileNamePath, FileMode.Create);
             for (int k = 0; k < threadNum; k++)
             {
-                fsTmp = new FileStream(fileNames[k], FileMode.Open);
+                FileStream fsTmp = new FileStream(fileNames[k], FileMode.Open);
                 while (true)
                 {
                     readSize = fsTmp.Read(bytes, 0, bufferSize);
@@ -168,32 +204,32 @@ namespace JavScraper.App
 
         private bool ValidateInputs()
         {
-            if (string.IsNullOrEmpty(txtInputDir.Text))
+            if (string.IsNullOrEmpty(txtInputFolder.Text))
             {
                 MessageBox.Show("请选择输入目录");
                 return false;
             }
 
-            if (string.IsNullOrEmpty(txtSuccessfulOutputDir.Text))
+            if (string.IsNullOrEmpty(txtSuccessfulOutputFolder.Text))
             {
                 MessageBox.Show("请选择成功输出目录");
                 return false;
             }
 
-            if (!Directory.Exists(txtInputDir.Text))
+            if (!Directory.Exists(txtInputFolder.Text))
             {
                 MessageBox.Show("输入目录不存在");
                 return false;
             }
 
-            if (!Directory.Exists(txtSuccessfulOutputDir.Text))
+            if (!Directory.Exists(txtSuccessfulOutputFolder.Text))
             {
-                Directory.CreateDirectory(txtSuccessfulOutputDir.Text);
+                Directory.CreateDirectory(txtSuccessfulOutputFolder.Text);
             }
 
-            if (!string.IsNullOrEmpty(txtFailedOutputDir.Text) && !Directory.Exists(txtFailedOutputDir.Text))
+            if (!string.IsNullOrEmpty(txtFailedOutputFolder.Text) && !Directory.Exists(txtFailedOutputFolder.Text))
             {
-                Directory.CreateDirectory(txtFailedOutputDir.Text);
+                Directory.CreateDirectory(txtFailedOutputFolder.Text);
             }
 
             return true;
@@ -201,7 +237,7 @@ namespace JavScraper.App
 
         private async Task ProcessMediaFilesAsync(CancellationToken cancellationToken)
         {
-            var mediaFiles = Directory.GetFiles(txtInputDir.Text, "*.*", SearchOption.AllDirectories)
+            var mediaFiles = Directory.GetFiles(txtInputFolder.Text, "*.*", SearchOption.AllDirectories)
                 .Where(f => IsMediaFile(f));
 
             foreach (var file in mediaFiles)
@@ -346,6 +382,20 @@ namespace JavScraper.App
             // 当裁切方式改变时更新预览
             comboBoxCropMode.SelectedIndexChanged += (s, e) =>
             {
+                // 根据裁切方式设置 trackBarScroll 默认值
+                switch (comboBoxCropMode.SelectedIndex)
+                {
+                    case 0: // 右侧
+                        trackBarScroll.Value = 100;
+                        break;
+                    case 1: // 中间
+                        trackBarScroll.Value = 50;
+                        break;
+                    case 2: // 左侧
+                        trackBarScroll.Value = 0;
+                        break;
+                }
+
                 if (!string.IsNullOrEmpty(currentImagePath))
                 {
                     GenerateAllImages(currentImagePath);
@@ -374,7 +424,7 @@ namespace JavScraper.App
         {
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Filter = "图片文件|*.jpg;*.jpeg";
+                dialog.Filter = "图片文件|*.jpg;*.jpeg;*.webp";
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     ProcessImageFile(dialog.FileName);
@@ -385,7 +435,7 @@ namespace JavScraper.App
         private void ProcessImageFile(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower();
-            if (ext == ".jpg" || ext == ".jpeg")
+            if (ext == ".jpg" || ext == ".jpeg" || ext == ".webp")
             {
                 currentImagePath = filePath;
                 GenerateAllImages(filePath);
@@ -393,7 +443,39 @@ namespace JavScraper.App
             }
             else
             {
-                MessageBox.Show("请选择 JPG 格式的图片文件");
+                MessageBox.Show("请选择 JPG 或 WebP 格式的图片文件");
+            }
+        }
+
+        /// <summary>
+        /// 将 WebP 文件转换为 JPG 格式
+        /// </summary>
+        /// <param name="webpPath">WebP 文件路径</param>
+        /// <returns>转换后的 JPG 文件路径，如果转换失败返回原路径</returns>
+        private string ConvertWebPToJpg(string webpPath)
+        {
+            try
+            {
+                string tempDir = Path.Combine(Application.StartupPath, "temp");
+                if (!Directory.Exists(tempDir))
+                {
+                    Directory.CreateDirectory(tempDir);
+                }
+                string fileName = Path.GetFileNameWithoutExtension(webpPath);
+                string jpgPath = Path.Combine(tempDir, $"{fileName}_{DateTime.Now.Ticks}.jpg");
+
+                // 使用 SixLabors.ImageSharp 处理 WebP 格式
+                using (var image = SixLabors.ImageSharp.Image.Load(webpPath))
+                {
+                    image.Save(jpgPath, new JpegEncoder());
+                    currentImagePath = jpgPath;
+                    return jpgPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"WebP 转换失败: {ex.Message}");
+                return webpPath;
             }
         }
 
@@ -401,7 +483,18 @@ namespace JavScraper.App
         {
             try
             {
-                using (var originalImage = Image.FromFile(imagePath))
+                string processPath = imagePath;
+                bool isConvertedFile = false;
+
+                // 如果是 WebP 格式，先转换为 JPG
+                string ext = Path.GetExtension(imagePath).ToLower();
+                if (ext == ".webp")
+                {
+                    processPath = ConvertWebPToJpg(imagePath);
+                    isConvertedFile = !processPath.Equals(imagePath);
+                }
+
+                using (var originalImage = Image.FromFile(processPath))
                 {
                     // 清理之前的预览图片
                     foreach (var img in previewImages.Values)
@@ -412,7 +505,7 @@ namespace JavScraper.App
 
                     // 生成所有预览图
                     previewImages["poster"] = GeneratePosterImage(originalImage);
-                    previewImages["folder"] = GeneratePosterImage(originalImage);
+                    previewImages["folder"] = previewImages["poster"];
                     previewImages["thumb"] = new Bitmap(originalImage);
                     previewImages["backdrop"] = new Bitmap(originalImage);
                     previewImages["fanart"] = new Bitmap(originalImage);
@@ -428,10 +521,23 @@ namespace JavScraper.App
                     pictureBoxBackdrop.Image = previewImages["backdrop"];
                     pictureBoxFanart.Image = previewImages["fanart"];
                 }
+
+                //// 清理临时转换的文件
+                //if (isConvertedFile && File.Exists(processPath))
+                //{
+                //    try
+                //    {
+                //        File.Delete(processPath);
+                //    }
+                //    catch
+                //    {
+                //        // 忽略删除临时文件的错误
+                //    }
+                //}
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"生成预览图失败: {ex.Message}");
+                MessageBox.Show($"生成预览图失败: {ex.Message}\n\n如果是 WebP 格式图片，请尝试转换为 JPG 格式后再使用。");
             }
         }
 
@@ -455,6 +561,7 @@ namespace JavScraper.App
             }
 
             CropMode cropMode = (CropMode)comboBoxCropMode.SelectedIndex;
+            float widthAdjustment = trackBarWidth.Value / 100.0f; // 从 TrackBar 获取宽度调整
             return ImageUtils.CropImage(originalImage, targetRatio, cropMode);
         }
 
@@ -478,12 +585,25 @@ namespace JavScraper.App
             {
                 string dirPath = Path.GetDirectoryName(currentImagePath);
 
+                List<string> fileNames = new List<string>() { "thumb", "poster", "fanart" };
                 // 保存所有预览图片
                 foreach (var kvp in previewImages)
                 {
                     string fileName = kvp.Key + ".jpg";
                     string filePath = Path.Combine(dirPath, fileName);
                     kvp.Value.Save(filePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    if (kvp.Key.Contains("fanart"))
+                    { 
+                        string landscapeFileName =  "landscape.jpg";
+                        string landscapePath = Path.Combine(dirPath, landscapeFileName);
+                        kvp.Value.Save(landscapePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    }
+                    if (fileNames.Contains(kvp.Key))
+                    {
+                        string dirName = new DirectoryInfo(Path.GetDirectoryName(currentImagePath))?.Name;
+                        string fileNamePath = Path.Combine(dirPath, $"{dirName}-{fileName}");
+                        kvp.Value.Save(fileNamePath, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    }
                 }
 
                 MessageBox.Show("所有图片保存完成!");
@@ -537,7 +657,7 @@ namespace JavScraper.App
 
         private string CreateOutputDirectory(JavInfo info)
         {
-            string baseDir = txtSuccessfulOutputDir.Text;
+            string baseDir = txtSuccessfulOutputFolder.Text;
             string outputDir = Path.Combine(baseDir, info.Number);
             Directory.CreateDirectory(outputDir);
             return outputDir;
@@ -545,13 +665,13 @@ namespace JavScraper.App
 
         private void MoveToFailedDir(string filePath)
         {
-            if (string.IsNullOrEmpty(txtFailedOutputDir.Text))
+            if (string.IsNullOrEmpty(txtFailedOutputFolder.Text))
                 return;
 
             try
             {
                 string fileName = Path.GetFileName(filePath);
-                string destPath = Path.Combine(txtFailedOutputDir.Text, fileName);
+                string destPath = Path.Combine(txtFailedOutputFolder.Text, fileName);
                 File.Move(filePath, destPath);
                 AppendLog($"移动文件到失败目录: {fileName}");
             }
@@ -604,6 +724,64 @@ namespace JavScraper.App
             return fileName + extension;
         }
 
+
+        private void SaveConfig()
+        {
+            try
+            {
+                var cfg = new AppConfig
+                {
+                    InputFolder = txtInputFolder.Text,
+                    SuccessfulOutputFolder = txtSuccessfulOutputFolder.Text,
+                    FailedOutputFolder = txtFailedOutputFolder.Text,
+                    DownCover = chkDownCover.Checked,
+                    IsDownloadCover = chkDownCover.Checked,
+                    DownGallery = chkDownGallery.Checked,
+                    GenerateNFO = chkGenerateNFO.Checked,
+                    IsGenNfoFile = chkGenerateNFO.Checked,
+                    CoverTypeIndex = comboBoxCoverType.SelectedIndex,
+                    CropModeIndex = comboBoxCropMode.SelectedIndex,
+                    TrackBarScroll = trackBarScroll.Value,
+                    TrackBarWidth = trackBarWidth.Value,
+                    NamingRule = textBoxNamingRule.Text,
+                    MultipleNamingRule = textBoxMultipleNamingRule.Text,
+                };
+
+                ConfigService.Save(cfg);
+            }
+            catch
+            {
+                // 忽略保存配置时的错误
+            }
+        }
+
+        private void LoadConfig()
+        {
+            try
+            {
+                var cfg = ConfigService.Load();
+
+                txtInputFolder.Text = cfg.InputFolder ?? string.Empty;
+                txtSuccessfulOutputFolder.Text = cfg.SuccessfulOutputFolder ?? string.Empty;
+                txtFailedOutputFolder.Text = cfg.FailedOutputFolder ?? string.Empty;
+                chkDownCover.Checked = cfg.IsDownloadCover || cfg.DownCover;
+                chkDownGallery.Checked = cfg.DownGallery;
+                chkGenerateNFO.Checked = cfg.IsGenNfoFile || cfg.GenerateNFO;
+                if (cfg.CoverTypeIndex >= 0 && cfg.CoverTypeIndex < comboBoxCoverType.Items.Count)
+                    comboBoxCoverType.SelectedIndex = cfg.CoverTypeIndex;
+                if (cfg.CropModeIndex >= 0 && cfg.CropModeIndex < comboBoxCropMode.Items.Count)
+                    comboBoxCropMode.SelectedIndex = cfg.CropModeIndex;
+                trackBarScroll.Value = Math.Max(trackBarScroll.Minimum, Math.Min(trackBarScroll.Maximum, cfg.TrackBarScroll));
+                trackBarWidth.Value = Math.Max(trackBarWidth.Minimum, Math.Min(trackBarWidth.Maximum, cfg.TrackBarWidth));
+                textBoxNamingRule.Text = cfg.NamingRule ?? string.Empty;
+                textBoxMultipleNamingRule.Text = cfg.MultipleNamingRule ?? string.Empty;
+            }
+            catch
+            {
+                // 忽略加载配置时的错误
+            }
+        }
+
         private void GenerateNFO(JavInfo info, string savePath)
         {
             var doc = new XDocument(
@@ -615,7 +793,7 @@ namespace JavScraper.App
                     new XElement("premiered", info.ReleaseDate),
                     new XElement("studio", info.Studio),
                     new XElement("genre", info.Genres?.Select(g => new XElement("genre", g))),
-                    new XElement("actor", info.Actresses?.Select(a => 
+                    new XElement("actor", info.Actresses?.Select(a =>
                         new XElement("actor",
                             new XElement("name", a)
                         )
@@ -645,7 +823,7 @@ namespace JavScraper.App
             {
                 AppendLog($"文件名: {fileName}");
                 AppendLog($"提取番号: {number}");
-                
+
                 // 测试 JavBusOrganization 调用
                 try
                 {
@@ -667,6 +845,125 @@ namespace JavScraper.App
             else
             {
                 AppendLog($"无法从文件名提取番号: {fileName}");
+            }
+        }
+
+        private void trackBarScroll_Scroll(object sender, EventArgs e)
+        {
+            //toolStripStatusLabelScroll.Text = $"滚动位置: {trackBarScroll.Value}";
+
+            if (string.IsNullOrEmpty(currentImagePath) || previewImages == null)
+                return;
+
+            try
+            {
+                using (var originalImage = Image.FromFile(currentImagePath))
+                {
+                    // 获取目标比例
+                    float targetRatio;
+                    switch (comboBoxCoverType.SelectedIndex)
+                    {
+                        case 0: targetRatio = 2f / 3f; break;
+                        case 1: targetRatio = 16f / 9f; break;
+                        case 2: targetRatio = 1f; break;
+                        default: targetRatio = 2f / 3f; break;
+                    }
+
+                    // 计算最大可移动像素
+                    int cropWidth = (int)(originalImage.Height * targetRatio);
+                    if (cropWidth > originalImage.Width)
+                        cropWidth = originalImage.Width;
+
+                    int maxOffset = originalImage.Width - cropWidth;
+                    int offset = 0;
+                    if (maxOffset > 0)
+                    {
+                        // trackBarScroll.Value 范围假设为 0~100
+                        offset = (int)(maxOffset * trackBarScroll.Value / 100.0);
+                    }
+
+                    // 裁切图片
+                    System.Drawing.Rectangle cropRect = new System.Drawing.Rectangle(offset, 0, cropWidth, originalImage.Height);
+                    using (Bitmap cropped = new Bitmap(cropRect.Width, cropRect.Height))
+                    using (Graphics g = Graphics.FromImage(cropped))
+                    {
+                        g.DrawImage(originalImage, new System.Drawing.Rectangle(0, 0, cropRect.Width, cropRect.Height), cropRect, GraphicsUnit.Pixel);
+
+                        // 替换预览图
+                        pictureBoxPoster.Image?.Dispose();
+                        pictureBoxPoster.Image = new Bitmap(cropped);
+
+                        // 更新缓存
+                        if (previewImages.ContainsKey("poster"))
+                        {
+                            previewImages["poster"]?.Dispose();
+                            previewImages["poster"] = new Bitmap(cropped);
+
+
+                        }     // 更新缓存
+                        if (previewImages.ContainsKey("folder"))
+                        {
+                            previewImages["folder"]?.Dispose();
+                            previewImages["folder"] = new Bitmap(cropped);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"图片裁切失败: {ex.Message}");
+            }
+        }
+
+        private void trackBarWidth_Scroll(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(currentImagePath) || previewImages == null)
+                return;
+
+            try
+            {
+                using (var originalImage = Image.FromFile(currentImagePath))
+                {
+                    // 获取目标比例
+                    float targetRatio;
+                    switch (comboBoxCoverType.SelectedIndex)
+                    {
+                        case 0: targetRatio = 2f / 3f; break;
+                        case 1: targetRatio = 16f / 9f; break;
+                        case 2: targetRatio = 1f; break;
+                        default: targetRatio = 2f / 3f; break;
+                    }
+
+                    // 获取裁切模式
+                    CropMode cropMode = (CropMode)comboBoxCropMode.SelectedIndex;
+
+                    // 将 trackBarWidth.Value (0~100) 转换为 widthAdjustment (0.0~1.0)
+                    float widthAdjustment = trackBarWidth.Value / 100.0f;
+
+                    // 使用新的裁切方法
+                    using var croppedImage = ImageUtils.CropImage(originalImage, targetRatio, cropMode);
+                    // 替换预览图
+                    pictureBoxPoster.Image?.Dispose();
+                    pictureBoxPoster.Image = new Bitmap(croppedImage);
+
+                    // 更新缓存
+                    if (previewImages.ContainsKey("poster"))
+                    {
+                        previewImages["poster"]?.Dispose();
+                        previewImages["poster"] = new Bitmap(croppedImage);
+                    }
+
+                    // 更新 folder 缓存
+                    if (previewImages.ContainsKey("folder"))
+                    {
+                        previewImages["folder"]?.Dispose();
+                        previewImages["folder"] = new Bitmap(croppedImage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"图片宽度调整失败: {ex.Message}");
             }
         }
     }

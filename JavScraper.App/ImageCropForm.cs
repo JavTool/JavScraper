@@ -8,6 +8,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using Image = System.Drawing.Image;
 
 namespace JavScraper.App
 {
@@ -104,7 +108,7 @@ namespace JavScraper.App
         {
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Filter = "图片文件|*.jpg;*.jpeg";
+                dialog.Filter = "图片文件|*.jpg;*.jpeg;*.webp";
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
                     ProcessImageFile(dialog.FileName);
@@ -115,7 +119,7 @@ namespace JavScraper.App
         private void ProcessImageFile(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower();
-            if (ext == ".jpg" || ext == ".jpeg")
+            if (ext == ".jpg" || ext == ".jpeg" || ext == ".webp")
             {
                 currentImagePath = filePath;
                 // 显示预览
@@ -125,7 +129,34 @@ namespace JavScraper.App
             }
             else
             {
-                MessageBox.Show("请选择JPG格式的图片文件");
+                MessageBox.Show("请选择 JPG 或 WebP 格式的图片文件");
+            }
+        }
+
+        /// <summary>
+        /// 将 WebP 文件转换为 JPG 格式
+        /// </summary>
+        /// <param name="webpPath">WebP 文件路径</param>
+        /// <returns>转换后的 JPG 文件路径，如果转换失败返回原路径</returns>
+        private string ConvertWebPToJpg(string webpPath)
+        {
+            try
+            {
+                string tempDir = Path.GetTempPath();
+                string fileName = Path.GetFileNameWithoutExtension(webpPath);
+                string jpgPath = Path.Combine(tempDir, $"{fileName}_{DateTime.Now.Ticks}.jpg");
+
+                // 使用 SixLabors.ImageSharp 处理 WebP 格式
+                using (var image = SixLabors.ImageSharp.Image.Load(webpPath))
+                {
+                    image.Save(jpgPath, new JpegEncoder());
+                    return jpgPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"WebP 转换失败: {ex.Message}");
+                return webpPath;
             }
         }
 
@@ -136,15 +167,39 @@ namespace JavScraper.App
                 var pictureBox = Controls.OfType<PictureBox>().FirstOrDefault();
                 if (pictureBox != null)
                 {
-                    using (var image = Image.FromFile(imagePath))
+                    string processPath = imagePath;
+                    bool isConvertedFile = false;
+                    
+                    // 如果是 WebP 格式，先转换为 JPG
+                    string ext = Path.GetExtension(imagePath).ToLower();
+                    if (ext == ".webp")
+                    {
+                        processPath = ConvertWebPToJpg(imagePath);
+                        isConvertedFile = !processPath.Equals(imagePath);
+                    }
+
+                    using (var image = Image.FromFile(processPath))
                     {
                         pictureBox.Image = new Bitmap(image);
+                    }
+
+                    // 清理临时转换的文件
+                    if (isConvertedFile && File.Exists(processPath))
+                    {
+                        try
+                        {
+                            File.Delete(processPath);
+                        }
+                        catch
+                        {
+                            // 忽略删除临时文件的错误
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"加载图片失败: {ex.Message}");
+                MessageBox.Show($"加载图片失败: {ex.Message}\n\n如果是 WebP 格式图片，请尝试转换为 JPG 格式后再使用。");
             }
         }
 
@@ -166,15 +221,45 @@ namespace JavScraper.App
 
             try
             {
+                string processPath = currentImagePath;
+                bool isConvertedFile = false;
+                
+                // 如果是 WebP 格式，先转换为 JPG
+                string ext = Path.GetExtension(currentImagePath).ToLower();
+                if (ext == ".webp")
+                {
+                    processPath = ConvertWebPToJpg(currentImagePath);
+                    isConvertedFile = !processPath.Equals(currentImagePath);
+                    
+                    if (!isConvertedFile)
+                    {
+                        // 转换失败，直接返回
+                        return;
+                    }
+                }
+
                 string destName = "poster";
                 string dirPath = Path.GetDirectoryName(currentImagePath);
 
-                ImageUtils.CutImage(currentImagePath, dirPath, destName);
+                ImageUtils.CutImage(processPath, dirPath, destName);
                 MessageBox.Show("裁切完成!");
+                
+                // 清理临时转换的文件
+                if (isConvertedFile && File.Exists(processPath))
+                {
+                    try
+                    {
+                        File.Delete(processPath);
+                    }
+                    catch
+                    {
+                        // 忽略删除临时文件的错误
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"裁切失败: {ex.Message}");
+                MessageBox.Show($"裁切失败: {ex.Message}\n\n如果是 WebP 格式图片，请尝试转换为 JPG 格式后再使用。");
             }
         }
     }

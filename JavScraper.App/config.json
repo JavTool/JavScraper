@@ -1,0 +1,78 @@
+{
+  "SampleImageSettings": {
+    "UseSeparateDirectory": true,
+    "DirectoryName": "samples"
+  },
+  "ActorReplaceSettings": {
+    "Enabled": true,
+    "Replacements": {
+      "坂道美琉": [ "miru", "坂道みる" ],
+      "田中柠檬": [ "枫カレン", "田中レモン" ]
+    }
+  },
+  "BackupSettings": {
+    "BackupNfo": true,
+    "BackupImages": true
+  },
+  "TitleSanitizerSettings": {
+
+  },
+  "ScraperSettings": {
+
+  },
+  "ProxyType": 0,
+  "HttpProxyUrl": "",
+  "Port": 80,
+  "Username": "",
+  "Password": "",
+  "IsFormAlwaysOnTop": false,
+  "IsDownloadCover": true,
+  "IsGenNfoFile": true,
+  "IsParseMultiFile": true,
+  "IsParseHasUC": true,
+  "IsParseHasU": true,
+  "IsParseHasSubtitle": true,
+  "IsMoveToFailFolderAlreadyExist": true,
+  "InputFolder": "F:\\Jav\\111",
+  "SuccessfulOutputFolder": "F:\\Jav\\222",
+  "FailedOutputFolder": "F:\\Jav\\333",
+  "NamingRule": "%Name%\\%HasSubtitle%[%ReleaseDate%] - [%ProductNumber%] - [%Title%]\\%HasSubtitle%[%ReleaseDate%] - [%ProductNumber%] - [%Title%]",
+  "MultipleNamingRule": "%Name%\\%HasSubtitle%[%ReleaseDate%] - [%ProductNumber%] - [%Title%]\\%HasSubtitle%[%ReleaseDate%] - [%ProductNumber%] - [%Title%]",
+  "FormWindowStateValue": 0,
+  "FormLeft": 218,
+  "FormTop": 96,
+  "FormWidth": 1118,
+  "FormHeight": 695,
+  "FileExtensionNames": ".avi;.wmv;.asf;.mpg;.mpeg;.dat;.vob;.ogm;.mp4;.3gp;.mkv;.rm;.rmvb;.flv;.swf;.mov;.m4v",
+  "IsUseCustomFileExtensionNames": false,
+  "MultiActorDelimiter": " ",
+  "IsNeedNotice": false,
+  "PreferJavWebOrder": "JavBusWeb,JapanArzonWeb,JavDBWeb",
+  "IsHasUCText": "<[中字无码破解] - >",
+  "IsHasUText": "<[无码破解] - >",
+  "IsHasSubtitleYesText": "<[中字] - >",
+  "IsHasSubtitleNoText": "",
+  "OnlyShowFirstFiveActor": true,
+  "ActorRankFileName": "ActorRank.txt",
+  "ActorInfoFileName": "ActorInfo.txt",
+  "MaxTitleLen": 150,
+  "MaxGetJavWebInfo": 2,
+  "CoverFanartPostfixName": "-fanart.jpg",
+  "CoverPosterPostfixName": "-poster.jpg",
+  "CoverThumbPostfixName": "-thumb.jpg",
+  "IsGenCoverFanart": true,
+  "IsGenCoverPoster": true,
+  "IsGenCoverThumb": true,
+  "IsCutCoverFanart": true,
+  "IsCutCoverPoster": true,
+  "IsCutCoverThumb": true,
+
+  "IsAddDashCToProductNumber": false,
+
+  "NfoOptionActorRuleIsWrite": true,
+  "NfoOptionIsHasUCText": "< [中字无码破解] >",
+  "NfoOptionIsHasUText": "< [无码破解] >",
+  "NfoOptionIsHasSubtitleYesText": "< [中字] >",
+  "NfoOptionTitleRenameRule": "[%ProductNumber%]%HasSubtitle%%Title%",
+  "NfoOptionMaxTitleLen": 150
+}
