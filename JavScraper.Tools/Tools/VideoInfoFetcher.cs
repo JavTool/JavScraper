@@ -79,20 +79,6 @@ public class VideoInfoFetcher
         }
     }
 
-    private async Task<JavVideo> TryFetchFromJavBusUncensored(string javId)
-    {
-        var javBusScraper = new JavBusUncensored(_loggerFactory);
-        try
-        {
-            return await javBusScraper.SearchAndParseJavVideo(javId);
-        }
-        catch (Exception ex)
-        {
-            LogError("JavBus", javId, ex);
-            return null;
-        }
-    }
-
     public async Task<JavVideo> TryGetMetadataAsync(JavId javId)
     {
         var makers = await HttpUtils.CheckMakerAsync(javId);
@@ -102,7 +88,7 @@ public class VideoInfoFetcher
     }
     private async Task<JavVideo> TryFetchFromJavUncensoredScraper(JavId javId)
     {
-        var javDBScraper = new JavUncensoredScraper(_loggerFactory);
+        var javDBScraper = new UncensoredScraper(_loggerFactory);
         try
         {
             JavVideo javVideo = await javDBScraper.SearchAndParseJavVideo(javId);
@@ -110,7 +96,7 @@ public class VideoInfoFetcher
             switch (javId.Matcher)
             {
                 case "AVE":
-                    javVideo = await javDBScraper.GetAVEMetadata(javId);
+                    javVideo = await javDBScraper.GetAvEntertainmentMetadata(javId);
                     Console.WriteLine($"成功从 AVE 获取番号 {javId.Id} 的数据");
                     break;
                 case "Caribbean":

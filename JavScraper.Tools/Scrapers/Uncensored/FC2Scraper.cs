@@ -4,16 +4,16 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers
+namespace JavScraper.Tools.Scrapers.Uncensored
 {
     /// <summary>
     /// FC2 刮削器
     /// </summary>
     public class FC2Scraper : IUncensoredScraper
     {
-        private readonly JavUncensoredScraper javUncensoredScraper;
+        private readonly UncensoredScraper javUncensoredScraper;
 
-        public FC2Scraper(JavUncensoredScraper javUncensoredScraper)
+        public FC2Scraper(UncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }

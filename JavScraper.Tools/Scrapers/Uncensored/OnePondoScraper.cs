@@ -1,28 +1,27 @@
 using JavScraper.Tools.Entities;
-using JavScraper.Tools.Entities;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers
+namespace JavScraper.Tools.Scrapers.Uncensored
 {
     /// <summary>
-    /// CaribbeancomPR 刮削器
+    /// 一本道刮削器
     /// </summary>
-    public class CaribbeancomPRScraper : IUncensoredScraper
+    public class OnePondoScraper : IUncensoredScraper
     {
-        private readonly JavUncensoredScraper javUncensoredScraper;
+        private readonly UncensoredScraper javUncensoredScraper;
 
-        public CaribbeancomPRScraper(JavUncensoredScraper javUncensoredScraper)
+        public OnePondoScraper(UncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }
 
-        public string Name => "CaribbeancomPR";
+        public string Name => "1Pondo";
 
         public bool CanHandle(JavId javId)
         {
-            // CaribbeancomPR 格式: 数字_数字 (例如: 010122_001)
+            // 1Pondo 格式: 数字_数字 (例如: 010122_001)
             return System.Text.RegularExpressions.Regex.IsMatch(javId, @"^\d{6}_\d{3}$");
         }
 
@@ -31,7 +30,7 @@ namespace JavScraper.Tools.Scrapers
             if (!CanHandle(javId))
                 return null;
 
-            return await javUncensoredScraper.GetCaribbeancomPRMetadata(javId);
+            return await javUncensoredScraper.Get1PondoMetadata(javId);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace JavScraper.Tools.Configuration
         /// <summary>
         /// 需要替换的字符串映射，键为要被替换的内容，值为替换后的内容。
         /// </summary>
-        public Dictionary<string, string> ReplaceMap { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> ReplaceMap { get; set; } = [];
 
         /// <summary>
         /// 从配置文件加载配置（默认从 config.json 中读取 TitleSanitizerSettings 节点）。

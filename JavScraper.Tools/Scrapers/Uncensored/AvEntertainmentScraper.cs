@@ -1,19 +1,16 @@
 using JavScraper.Tools.Entities;
-using JavScraper.Tools.Entities;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers
+namespace JavScraper.Tools.Scrapers.Uncensored
 {
     /// <summary>
-    /// AVE 刮削器
+    /// AvEntertainment 刮削器
     /// </summary>
-    public class AVEScraper : IUncensoredScraper
+    public class AvEntertainmentScraper : IUncensoredScraper
     {
-        private readonly JavUncensoredScraper javUncensoredScraper;
+        private readonly UncensoredScraper javUncensoredScraper;
 
-        public AVEScraper(JavUncensoredScraper javUncensoredScraper)
+        public AvEntertainmentScraper(UncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }
@@ -31,7 +28,7 @@ namespace JavScraper.Tools.Scrapers
             if (!CanHandle(javId))
                 return null;
 
-            return await javUncensoredScraper.GetAVEMetadata(javId);
+            return await javUncensoredScraper.GetAvEntertainmentMetadata(javId);
         }
     }
 }

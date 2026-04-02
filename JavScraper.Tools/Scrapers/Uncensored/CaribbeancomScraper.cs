@@ -3,16 +3,16 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers
+namespace JavScraper.Tools.Scrapers.Uncensored
 {
     /// <summary>
     /// Caribbeancom 刮削器
     /// </summary>
     public class CaribbeancomScraper : IUncensoredScraper
     {
-        private readonly JavUncensoredScraper javUncensoredScraper;
+        private readonly UncensoredScraper javUncensoredScraper;
 
-        public CaribbeancomScraper(JavUncensoredScraper javUncensoredScraper)
+        public CaribbeancomScraper(UncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }

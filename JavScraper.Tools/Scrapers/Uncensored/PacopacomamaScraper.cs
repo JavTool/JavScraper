@@ -1,19 +1,16 @@
 using JavScraper.Tools.Entities;
-using JavScraper.Tools.Entities;
-using Microsoft.Extensions.Logging;
-using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers
+namespace JavScraper.Tools.Scrapers.Uncensored
 {
     /// <summary>
     /// Pacopacomama 刮削器
     /// </summary>
     public class PacopacomamaScraper : IUncensoredScraper
     {
-        private readonly JavUncensoredScraper javUncensoredScraper;
+        private readonly UncensoredScraper javUncensoredScraper;
 
-        public PacopacomamaScraper(JavUncensoredScraper javUncensoredScraper)
+        public PacopacomamaScraper(UncensoredScraper javUncensoredScraper)
         {
             this.javUncensoredScraper = javUncensoredScraper;
         }

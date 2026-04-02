@@ -30,7 +30,7 @@ namespace JavScraper.Tools.Services
             var key = System.Console.ReadKey();
             System.Console.WriteLine("");
             
-            return key.KeyChar.ToString().ToUpper() == "Y";
+            return key.KeyChar.ToString().Equals("Y", System.StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

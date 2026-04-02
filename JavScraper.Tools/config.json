@@ -1,6 +1,23 @@
 {
   "SampleImageSettings": {
     "UseSeparateDirectory": true,
-    "DirectoryName": "sample"
+    "DirectoryName": "samples"
+  },
+  "ActorReplaceSettings": {
+    "Enabled": true,
+    "Replacements": {
+      "坂道美琉": [ "miru", "坂道みる" ],
+      "田中柠檬": [ "枫カレン", "田中レモン" ]
+    }
+  },
+  "BackupSettings": {
+    "BackupNfo": true,
+    "BackupImages": true
+  },
+  "TitleSanitizerSettings": {
+
+  },
+  "ScraperSettings": {
+
   }
 }

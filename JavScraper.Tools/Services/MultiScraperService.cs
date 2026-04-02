@@ -30,14 +30,14 @@ namespace JavScraper.Tools.Services
         /// </summary>
         private void InitializeScrapers()
         {
-            var javDBScraper = new JavUncensoredScraper(_loggerFactory);
+            var javDBScraper = new UncensoredScraper(_loggerFactory);
 
             _scrapers.Add("Caribbeancom", new CaribbeancomScraper(javDBScraper));
             _scrapers.Add("CaribbeancomPR", new CaribbeancomPRScraper(javDBScraper));
             _scrapers.Add("1Pondo", new OnePondoScraper(javDBScraper));
             _scrapers.Add("Pacopacomama", new PacopacomamaScraper(javDBScraper));
             _scrapers.Add("Heyzo", new HeyzoScraper(javDBScraper));
-            _scrapers.Add("AVE", new AVEScraper(javDBScraper));
+            _scrapers.Add("AVE", new AvEntertainmentScraper(javDBScraper));
             _scrapers.Add("FC2", new FC2Scraper(javDBScraper));
         }
 

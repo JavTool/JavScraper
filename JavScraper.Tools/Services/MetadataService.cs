@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.IO.Compression;
 
 namespace JavScraper.Tools.Services
 {
@@ -70,6 +71,7 @@ namespace JavScraper.Tools.Services
         private readonly TitleSanitizerConfig _titleSanitizerConfig;
         private readonly ScraperConfig _scraperConfig;
         private readonly ActorReplaceConfig _actorReplaceConfig;
+        private readonly BackupConfig _backupConfig;
 
         /// <summary>标签映射字典，用于将简化标签映射为完整标签</summary>
         private static readonly Dictionary<string, string> TagMappings = new()
@@ -90,6 +92,7 @@ namespace JavScraper.Tools.Services
             _titleSanitizerConfig = TitleSanitizerConfig.LoadFromFile();
             _scraperConfig = ScraperConfig.LoadFromFile();
             _actorReplaceConfig = JavScraper.Tools.Configuration.ActorReplaceConfig.LoadFromFile();
+            _backupConfig = BackupConfig.LoadFromFile();
         }
 
         /// <summary>
@@ -116,6 +119,20 @@ namespace JavScraper.Tools.Services
                 {
                     await ProcessNfoFile(javFile.Key);
                 }
+            }
+
+            // 在完成单文件处理后，根据备份配置打包备份（NFO / 图片）为 zip
+            try
+            {
+                var cfg = BackupConfig.LoadFromFile();
+                if (cfg.BackupNfo || cfg.BackupImages)
+                {
+                    CreateZipBackup(path);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("执行 zip 备份时发生错误", ex);
             }
 
             // 第二步：执行标签修复和重命名操作
@@ -232,14 +249,79 @@ namespace JavScraper.Tools.Services
         /// </summary>
         /// <param name="fileInfo">要备份的文件信息对象。</param>
         /// <remarks>备份文件名格式为 {原文件名}.bak{原扩展名}，例如 foo.nfo -> foo.bak.nfo。</remarks>
-        private void CreateBackupIfNotExists(FileInfo fileInfo)
+        private static void CreateBackupIfNotExists(FileInfo fileInfo)
         {
+            // 默认备份 nfo 到 .bak.nfo，如果配置要求将由外层调用统一打包zip，这里仅在 BackupNfo 为 true 时创建单个备份文件
+            var backupConfig = BackupConfig.LoadFromFile();
+            if (!backupConfig.BackupNfo)
+                return;
+
             var destFileName = Path.Combine(fileInfo.DirectoryName,
                 $"{Path.GetFileNameWithoutExtension(fileInfo.FullName)}{BACKUP_EXTENSION}{fileInfo.Extension}");
 
             if (!File.Exists(destFileName))
             {
                 fileInfo.CopyTo(destFileName);
+            }
+        }
+
+        /// <summary>
+        /// 将指定目录中的备份文件和/或图片打包为 zip，文件名格式：backup_yyyyMMddHHmmss.zip
+        /// </summary>
+        /// <param name="rootPath">要打包的根目录</param>
+        private void CreateZipBackup(string rootPath)
+        {
+            try
+            {
+                var cfg = BackupConfig.LoadFromFile();
+                var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+                var zipName = Path.Combine(rootPath, $"backup_{timestamp}.zip");
+
+                using var zipFile = ZipFile.Open(zipName, ZipArchiveMode.Create);
+
+                if (cfg.BackupNfo)
+                {
+                    // 查找所有 .nfo 文件并添加
+                    var nfoFiles = Directory.GetFiles(rootPath, "*.nfo", SearchOption.AllDirectories);
+
+                    foreach (var f in nfoFiles)
+                    {
+                        try
+                        {
+                            var entryName = Path.GetRelativePath(rootPath, f).Replace('\\', '/');
+                            using var fs = File.OpenRead(f);
+                            var entry = zipFile.CreateEntry(entryName, CompressionLevel.Optimal);
+                            using var es = entry.Open();
+                            fs.CopyTo(es);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (cfg.BackupImages)
+                {
+                    var imgs = Directory.GetFiles(rootPath, "*", SearchOption.AllDirectories)
+                        .Where(p => p.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+
+                    foreach (var img in imgs)
+                    {
+                        try
+                        {
+                            var entryName = Path.GetRelativePath(rootPath, img).Replace('\\', '/');
+                            using var fs = File.OpenRead(img);
+                            var entry = zipFile.CreateEntry(entryName, CompressionLevel.Optimal);
+                            using var es = entry.Open();
+                            fs.CopyTo(es);
+                        }
+                        catch { }
+                    }
+                }
+
+                LogInformation($"创建备份文件: {zipName}");
+            }
+            catch (Exception ex)
+            {
+                LogError("创建 zip 备份失败", ex);
             }
         }
 
@@ -394,7 +476,7 @@ namespace JavScraper.Tools.Services
             if (!_actorReplaceConfig.Enabled)
                 return actors ?? new List<string>();
 
-            return ActorNameReplacer.ReplaceActors(actors ?? [], _actorReplaceConfig.Replacements);
+            return ActorNameReplacer.ReplaceActors(actors ?? new List<string>(), _actorReplaceConfig.Replacements);
         }
 
         /// <summary>

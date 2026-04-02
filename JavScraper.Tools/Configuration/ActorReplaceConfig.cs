@@ -12,17 +12,13 @@ namespace JavScraper.Tools.Configuration
         /// <summary>
         /// 是否启用演员名称替换功能
         /// </summary>
-        public bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = false;
 
         /// <summary>
         /// 替换映射：键为目标（统一）名称，值为该目标名称所有的别名列表
         /// 例如: { "坂道美琉": ["miru","坂道みる"] }
         /// </summary>
-        public Dictionary<string, List<string>> Replacements { get; set; } = new Dictionary<string, List<string>>
-        {
-            { "坂道美琉", new List<string> { "miru", "坂道みる" } },
-            { "田中柠檬", new List<string> { "枫カレン", "田中レモン" } }
-        };
+        public Dictionary<string, List<string>> Replacements { get; set; } = new Dictionary<string, List<string>>();
 
         public static ActorReplaceConfig LoadFromFile(string configFilePath = "config.json")
         {
