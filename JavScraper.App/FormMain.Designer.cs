@@ -403,7 +403,7 @@ namespace JavScraper.App
             btnTest.TabIndex = 2;
             btnTest.Text = "测试";
             btnTest.UseVisualStyleBackColor = true;
-            btnTest.Click += btnTest_Click;
+            btnTest.Click += BtnTest_Click;
             // 
             // btnStop
             // 
@@ -413,7 +413,7 @@ namespace JavScraper.App
             btnStop.TabIndex = 2;
             btnStop.Text = "停止";
             btnStop.UseVisualStyleBackColor = true;
-            btnStop.Click += btnStop_Click;
+            btnStop.Click += BtnStop_Click;
             // 
             // btnStart
             // 
@@ -423,7 +423,7 @@ namespace JavScraper.App
             btnStart.TabIndex = 1;
             btnStart.Text = "开始";
             btnStart.UseVisualStyleBackColor = true;
-            btnStart.Click += btnStart_Click;
+            btnStart.Click += BtnStart_Click;
             // 
             // chkGenerateNFO
             // 
@@ -597,7 +597,7 @@ namespace JavScraper.App
             trackBarWidth.Name = "trackBarWidth";
             trackBarWidth.Size = new Size(134, 23);
             trackBarWidth.TabIndex = 9;
-            trackBarWidth.Scroll += trackBarWidth_Scroll;
+            trackBarWidth.Scroll += TrackBarWidth_Scroll;
             // 
             // label15
             // 
@@ -1085,7 +1085,7 @@ namespace JavScraper.App
             optionToolStripMenuItem.Name = "optionToolStripMenuItem";
             optionToolStripMenuItem.Size = new Size(116, 22);
             optionToolStripMenuItem.Text = "Option";
-            optionToolStripMenuItem.Click += optionToolStripMenuItem_Click;
+            optionToolStripMenuItem.Click += OptionToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 

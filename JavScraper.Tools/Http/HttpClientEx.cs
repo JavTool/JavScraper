@@ -65,6 +65,8 @@ namespace JavScraper.Tools.Http
             return client;
         }
 
+
+
         public Task<string> GetStringAsync(string requestUri)
             => GetClient().GetStringAsync(requestUri);
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace JavScraper.App.Models
+namespace JavScraper.Common.Models
 {
     /// <summary>
     /// 视频
@@ -19,6 +19,7 @@ namespace JavScraper.App.Models
             Samples = [];
             Tags = [];
             Genres = [];
+            Actors = [];
         }
 
         /// <summary>

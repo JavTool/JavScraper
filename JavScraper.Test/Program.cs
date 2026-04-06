@@ -259,7 +259,7 @@ namespace JavScraper.Test
             for (int i = 10; i < 22; i++)
             {
                 string url = string.Format("https://en.heyzo.com/contents/3000/0469/gallery/0{0}.jpg", i);
-                Downloader.Download(url, @"f:\0469\gallery");
+                //Downloader.DownloadAsync(url, @"f:\0469\gallery");
             }
         }
 

@@ -1,7 +1,6 @@
 using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
 using JavScraper.App.Scrapers.Uncensored;
-using JavScraper.Tools.Scrapers.Uncensored;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

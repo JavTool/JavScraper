@@ -3,7 +3,7 @@ using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers.Uncensored
+namespace JavScraper.App.Scrapers.Uncensored
 {
     /// <summary>
     /// 一本道刮削器

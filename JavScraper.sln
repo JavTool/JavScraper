@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36119.2 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11612.150 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JavScraper", "JavScraper\JavScraper.csproj", "{5D95371F-E329-4650-9C45-D73865A2A34E}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JavScraper.Common", "JavScraper.Common\JavScraper.Common.csproj", "{C1A6C2D9-8F39-47AB-894E-657D3F1160A5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JavScraper.Tools", "JavScraper.Tools\JavScraper.Tools.csproj", "{D7EE426B-EACA-486B-B4C3-03FA3D6A0CC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JavScraper.Common.Test", "JavScraper.Common.Test\JavScraper.Common.Test.csproj", "{67D87ADE-5F4C-D951-C00B-5D9B5711B389}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{D7EE426B-EACA-486B-B4C3-03FA3D6A0CC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7EE426B-EACA-486B-B4C3-03FA3D6A0CC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7EE426B-EACA-486B-B4C3-03FA3D6A0CC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67D87ADE-5F4C-D951-C00B-5D9B5711B389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67D87ADE-5F4C-D951-C00B-5D9B5711B389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67D87ADE-5F4C-D951-C00B-5D9B5711B389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67D87ADE-5F4C-D951-C00B-5D9B5711B389}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,9 +31,28 @@ namespace JavScraper.App.Scrapers
         public override bool CheckKeyword(string key) => JavRecognizer.FC2(key) == null;
 
 
-        public override Task<List<JavVideo>> ParseList(string url)
+        public override async Task<List<JavVideo>> ParseList(string url)
         {
-            throw new NotImplementedException();
+            var ls = new List<JavVideo>();
+            var doc = await GetHtmlDocumentAsync(url);
+            if (doc == null)
+                return ls;
+
+            var nodes = doc.DocumentNode.SelectNodes("//div[contains(@class,'video-list')]/a");
+            if (nodes?.Any() != true)
+                return ls;
+
+            foreach (var node in nodes)
+            {
+                var videoUrl = node.GetAttributeValue("href", null);
+                if (string.IsNullOrWhiteSpace(videoUrl))
+                    continue;
+
+                var video = new JavVideo { Url = videoUrl };
+                ls.Add(video);
+            }
+
+            return ls;
         }
 
         public override Task<List<JavVideo>> ParseList(List<JavVideo> ls, HtmlDocument doc)
@@ -102,6 +123,22 @@ namespace JavScraper.App.Scrapers
                 video.Title = video.Title[video.Number.Length..].Trim();
 
             return video;
+        }
+
+        public async Task<JavVideo> SearchAndParseJavVideo(string javId)
+        {
+            var searchUrl = $"https://www.javbus.com/search/{javId}";
+            var doc = await GetHtmlDocumentAsync(searchUrl);
+            if (doc == null)
+                return null;
+
+            var videoNode = doc.DocumentNode.SelectSingleNode("//div[contains(@class,'video-list')]/a");
+            if (videoNode == null)
+                return null;
+
+            var videoUrl = videoNode.GetAttributeValue("href", null);
+            var javVideo = await ParsePage(videoUrl);
+            return javVideo;
         }
     }
 }

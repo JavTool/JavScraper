@@ -1,12 +1,11 @@
 using JavScraper.App;
 using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
-
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace JavScraper.Tools.Scrapers.Uncensored
+namespace JavScraper.App.Scrapers.Uncensored
 {
     /// <summary>
     /// FC2 刮削器

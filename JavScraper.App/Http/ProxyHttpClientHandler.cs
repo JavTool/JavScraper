@@ -43,6 +43,10 @@ namespace JavScraper.App.Http
             if (request.RequestUri.ToString().Contains("dmm.co.jp") && !(request.Headers.TryGetValues("Cookie", out var cookies2) && cookies2.Contains("age_check_done=1")))
                 request.Headers.Add("Cookie", "age_check_done=1");
 
+            // javdb.com 加入年龄认证 Cookies
+            if (request.RequestUri.ToString().Contains("javdb.com") && !(request.Headers.TryGetValues("Cookie", out var cookies3) && cookies3.Contains("over18=1")))
+                request.Headers.Add("Cookie", "over18=1");
+
             // Add UserAgent
             if (!(request.Headers.UserAgent?.Count() > 0))
                 request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36");

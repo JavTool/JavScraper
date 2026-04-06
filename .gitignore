@@ -16,3 +16,6 @@
 /JavScraper.Tools/obj
 *.log
 /tools/logs
+/JavScraper.Common.Test/bin/Debug/net8.0
+/JavScraper.Common.Test/obj
+/JavScraper.Common/docs

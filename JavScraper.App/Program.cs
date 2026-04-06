@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Extensions.Logging;
 
 namespace JavScraper.App
 {
@@ -14,10 +15,20 @@ namespace JavScraper.App
         [STAThread]
         static void Main()
         {
+            // 初始化全局日志工厂
+            AppLogging.Initialize();
+
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormMain());
+            try
+            {
+                Application.Run(new FormMain());
+            }
+            finally
+            {
+                AppLogging.Shutdown();
+            }
         }
     }
 }

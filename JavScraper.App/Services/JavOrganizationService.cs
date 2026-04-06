@@ -1,5 +1,6 @@
 ﻿using JavScraper.App.Models;
 using JavScraper.App.Scrapers;
+using JavScraper.App.Scrapers.Uncensored;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,60 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace JavScraper.App
+namespace JavScraper.App.Services
 {
-    public class JavOrganization
+    public class JavOrganizationService
     {
+        private readonly ILogger _logger;
+
+        public JavOrganizationService()
+        {
+            _logger = AppLogging.Factory.CreateLogger<JavOrganizationService>();
+
+            //_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// 获取单个番号的信息
+        /// </summary>
+        /// <param name="number">番号</param>
+        /// <returns>番号信息</returns>
+        public static async Task<JavInfo> GetJavInfo(string number)
+        {
+            var _loggerFactory = AppLogging.Factory;
+            try
+            {
+
+                var javDBScraper = new JavDBUncensored(_loggerFactory);
+                JavVideo javVideo = await javDBScraper.SearchAndParseJavVideo(number);
+                var url = $"https://www.javbus.com/{number}";
+                //var javBus = new JavDB(_loggerFactory); // 或者传入 loggerFactory
+
+                //var javVideo = await javBus.ParsePage(url);
+                if (javVideo == null)
+                    return null;
+
+                return new JavInfo
+                {
+                    Number = javVideo.Number,
+                    Title = javVideo.Title,
+                    ReleaseDate = javVideo.Date,
+                    Studio = javVideo.Studio,
+                    CoverUrl = $"https://www.javbus.com/{javVideo.Cover}",
+                    Actresses = javVideo.Actors?.ToList(),
+                    Genres = javVideo.Genres?.ToList(),
+                    GalleryUrls = javVideo.Samples?.Select(s =>
+                        Regex.IsMatch(s, @"^http(s)?://") ? s : $"https://www.javbus.com/{s}")
+                        .ToList()
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+
         public static void OrganizeVideo(string sourcePath, string destPath)
         {
 
@@ -334,41 +385,7 @@ namespace JavScraper.App
             }
         }
 
-        /// <summary>
-        /// 获取单个番号的信息
-        /// </summary>
-        /// <param name="number">番号</param>
-        /// <returns>番号信息</returns>
-        public static async Task<JavInfo> GetJavInfo(string number)
-        {
-            try
-            {
-                var url = $"https://www.javbus.com/{number}";
-                var javBus = new JavBus(null); // 或者传入 loggerFactory
 
-                var javVideo = await javBus.ParsePage(url);
-                if (javVideo == null)
-                    return null;
-
-                return new JavInfo
-                {
-                    Number = javVideo.Number,
-                    Title = javVideo.Title,
-                    ReleaseDate = javVideo.Date,
-                    Studio = javVideo.Studio,
-                    CoverUrl = $"https://www.javbus.com/{javVideo.Cover}",
-                    Actresses = javVideo.Actors?.ToList(),
-                    Genres = javVideo.Genres?.ToList(),
-                    GalleryUrls = javVideo.Samples?.Select(s => 
-                        Regex.IsMatch(s, @"^http(s)?://") ? s : $"https://www.javbus.com/{s}")
-                        .ToList()
-                };
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
 
 
     }

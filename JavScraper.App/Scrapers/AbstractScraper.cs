@@ -396,7 +396,7 @@ namespace JavScraper.App.Scrapers
                     //Date = GetValue("日期"),
                     //Runtime = GetValue("時長"),
                     //Maker = GetValue("片商"),
-                    Studio = GetValue("スタジオ"),
+                    //Studio = GetValue("發行"),
                     //Set = GetValue("系列"),
                     //Director = GetValue("導演"),
                     Genres = GetGenres(),
@@ -1460,7 +1460,7 @@ namespace JavScraper.App.Scrapers
         /// </summary>
         /// <param name="requestUri"></param>
         /// <returns></returns>
-        public virtual async Task<HtmlDocument> GetHtmlDocumentAsync(string requestUri)
+        public virtual async Task<HtmlDocument> GetHtmlAsync(string requestUri)
         {
             try
             {
@@ -1479,6 +1479,48 @@ namespace JavScraper.App.Scrapers
 
             return null;
         }
+
+        public virtual async Task<HtmlDocument> GetHtmlDocumentAsync(string requestUri)
+        {
+            try
+            {
+                var req = new HttpRequestMessage(HttpMethod.Get, requestUri);
+                // 浏览器风格头
+                req.Headers.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36");
+                req.Headers.Accept.ParseAdd("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+                req.Headers.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+                // 如果你不能通过 CookieContainer 设置 cookie，可在此处临时添加
+                req.Headers.Add("Cookie", "over18=1");
+
+                using var resp = await client.GetClient().SendAsync(req);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var body = await resp.Content.ReadAsStringAsync();
+                    log?.LogWarning($"GET {requestUri} => {(int)resp.StatusCode} {resp.ReasonPhrase}. Body: {body?.Substring(0, Math.Min(200, body?.Length ?? 0))}");
+                    if (resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        // 403 回退：尝试用 Puppeteer 渲染（若站点依赖 JS/Cloudflare）
+                        return await GetRenderedHtmlAsync(requestUri);
+                    }
+                    return null;
+                }
+
+                var html = await resp.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(html) == false)
+                {
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(html);
+                    return doc;
+                }
+            }
+            catch (Exception ex)
+            {
+                log?.LogError($"{ex.Message}");
+            }
+
+            return null;
+        }
+
 
         public async Task<HtmlDocument> GetRenderedHtmlAsync(string url)
         {

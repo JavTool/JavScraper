@@ -20,6 +20,38 @@ JavScraper.Tools 是一个命令行工具，使用 C# 编写。
 - 图片处理（封面、演员照片）
 - 批量处理支持
 
+## 核心组件
+
+### ScraperFactory（刮削器工厂）
+参考 [metatube-sdk-go provider](https://github.com/metatube-community/metatube-sdk-go/tree/main/provider) 设计模式实现的刮削器工厂类，用于按名称实例化各种 Scraper。
+
+**主要特性：**
+- ✅ 自动发现并注册所有实现了 `IScraperV2` 接口的刮削器
+- ✅ 支持手动注册自定义刮削器工厂
+- ✅ 线程安全（使用 ReaderWriterLockSlim）
+- ✅ 按需创建实例，避免状态污染
+- ✅ 支持遍历所有已注册的工厂
+
+**使用示例：**
+```csharp
+// 获取 ScraperFactory 实例
+var scraperFactory = serviceProvider.GetRequiredService<ScraperFactory>();
+
+// 查看所有已注册的刮削器
+var scrapers = scraperFactory.GetAvailableScrapers();
+
+// 创建指定名称的刮削器实例
+var javBus = scraperFactory.CreateScraper("JavBus");
+
+// 查找可以处理特定关键字的刮削器
+var suitableScrapers = scraperFactory.FindScrapers("HEYZO-1234");
+
+// 手动注册自定义刮削器
+scraperFactory.RegisterFactory("CustomScraper", () => new CustomScraper());
+```
+
+详细文档请参阅：[Scrapers/README_ScraperFactory.md](Scrapers/README_ScraperFactory.md)
+
 ## 项目依赖
 
 本项目依赖以下第三方库：
