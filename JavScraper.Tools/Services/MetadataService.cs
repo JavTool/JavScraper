@@ -365,6 +365,19 @@ namespace JavScraper.Tools.Services
                     {
                         // Use DMM scraper to search and parse by jav id
                         javVideo = await new DMM(_loggerFactory).SearchAndParseJavVideo(javId.Id);
+                        for (int i = 0; i < javVideo.Samples.Count; i++)
+                        {
+                            if (javVideo.Samples[i].Contains("dmm.co.jp")&&!javVideo.Samples[i].Contains("jp-"))
+                            {
+                                // 处理缩略图地址，添加 "jp" 前缀
+                                javVideo.Samples[i] = javVideo.Samples[i].Contains("jp-") ? javVideo.Samples[i] : Regex.Replace(javVideo.Samples[i], @"-", "jp-"); // 只在最后一个 "-" 前添加 "jp"
+                            }
+                            if (javVideo.Samples[i].Contains("dmm.co.jp") && javVideo.Samples[i].Contains("ps.jpg"))
+                            {
+                                // 处理缩略图地址，添加 "jp" 前缀
+                                javVideo.Samples[i] = javVideo.Samples[i].Contains("pl.jpg") ? javVideo.Samples[i] : Regex.Replace(javVideo.Samples[i], @"ps.jpg", "pl.jpg"); // 只在最后一个 "-" 前添加 "jp"
+                            }
+                        }              
                     }
                     else if (string.Equals(scraperName, "Jav123", StringComparison.OrdinalIgnoreCase))
                     {
@@ -734,7 +747,7 @@ namespace JavScraper.Tools.Services
         /// <remarks>会根据 <see cref="SampleImageConfig.UseSeparateDirectory"/> 决定保存目录和文件命名规则。</remarks>
         private async Task DownloadSampleImages(List<string> samples, string directoryName)
         {
-            if (samples == null || !samples.Any())
+            if (samples == null || samples.Count == 0)
                 return;
 
             var targetDir = GetSampleDownloadDirectory(directoryName);

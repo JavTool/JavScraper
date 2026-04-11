@@ -7,7 +7,7 @@ import argparse
 
 '''
 使用方法：
-python rename_tool.py "F:\111\222" --default-patterns
+python rename_tool.py "G:\Jav\222" --default-patterns
 '''
 
 def setup_logging(log_dir):
