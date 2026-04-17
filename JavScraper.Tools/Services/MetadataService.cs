@@ -1,15 +1,19 @@
+using JavScraper.Domain;
+using JavScraper.Tools.Configuration;
 using JavScraper.Tools.Entities;
+using JavScraper.Tools.Http;
 using JavScraper.Tools.Scrapers;
 using JavScraper.Tools.Tools;
-using JavScraper.Tools.Configuration;
+using JavScraper.Tools.Utils;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.IO.Compression;
+using static JavScraper.Tools.ImageUtils;
 
 namespace JavScraper.Tools.Services
 {
@@ -121,20 +125,6 @@ namespace JavScraper.Tools.Services
                 }
             }
 
-            // 在完成单文件处理后，根据备份配置打包备份（NFO / 图片）为 zip
-            try
-            {
-                var cfg = BackupConfig.LoadFromFile();
-                if (cfg.BackupNfo || cfg.BackupImages)
-                {
-                    CreateZipBackup(path);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("执行 zip 备份时发生错误", ex);
-            }
-
             // 第二步：执行标签修复和重命名操作
             await FixNfoTagsAsync(path);
         }
@@ -218,7 +208,7 @@ namespace JavScraper.Tools.Services
         /// <param name="filePath">NFO 文件完整路径。</param>
         /// <returns>表示异步操作的任务。</returns>
         /// <remarks>
-        /// 1. 创建 .bak 备份；
+        /// 1. 创建 .zip 备份；
         /// 2. 使用 <see cref="NfoFileManager"/> 读取 NFO 并解析番号；
         /// 3. 调用 <see cref="GetMetadataFromNfo"/> 抓取详细信息并调用 <see cref="ProcessMetadata"/> 完成修正与保存。
         /// </remarks>
@@ -226,8 +216,20 @@ namespace JavScraper.Tools.Services
         {
             var fileInfo = new FileInfo(filePath);
 
-            // 备份 nfo 文件
-            CreateBackupIfNotExists(fileInfo);
+            // 根据全局备份配置决定是否对整个根目录执行 zip 备份
+            try
+            {
+                var cfg = BackupConfig.LoadFromFile();
+                if (cfg.BackupNfo || cfg.BackupImages)
+                {
+                    // 使用当前文件所在根目录作为打包根（保持原行为为传入的 path）
+                    CreateZipBackup(fileInfo.DirectoryName);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("执行 zip 备份时发生错误", ex);
+            }
 
             var nfoManager = new NfoDocument(filePath);
             if (string.IsNullOrEmpty(nfoManager.ToString()))
@@ -353,7 +355,7 @@ namespace JavScraper.Tools.Services
                 return null;
             }
 
-            JavVideo javVideo = null;
+            Entities.JavVideo javVideo = null;
 
             // 根据配置优先级尝试不同的刮削器
             foreach (var scraperName in _scraperConfig.PreferredScrapers ?? [])
@@ -367,7 +369,7 @@ namespace JavScraper.Tools.Services
                         javVideo = await new DMM(_loggerFactory).SearchAndParseJavVideo(javId.Id);
                         for (int i = 0; i < javVideo.Samples.Count; i++)
                         {
-                            if (javVideo.Samples[i].Contains("dmm.co.jp")&&!javVideo.Samples[i].Contains("jp-"))
+                            if (javVideo.Samples[i].Contains("dmm.co.jp") && !javVideo.Samples[i].Contains("jp-"))
                             {
                                 // 处理缩略图地址，添加 "jp" 前缀
                                 javVideo.Samples[i] = javVideo.Samples[i].Contains("jp-") ? javVideo.Samples[i] : Regex.Replace(javVideo.Samples[i], @"-", "jp-"); // 只在最后一个 "-" 前添加 "jp"
@@ -377,7 +379,7 @@ namespace JavScraper.Tools.Services
                                 // 处理缩略图地址，添加 "jp" 前缀
                                 javVideo.Samples[i] = javVideo.Samples[i].Contains("pl.jpg") ? javVideo.Samples[i] : Regex.Replace(javVideo.Samples[i], @"ps.jpg", "pl.jpg"); // 只在最后一个 "-" 前添加 "jp"
                             }
-                        }              
+                        }
                     }
                     else if (string.Equals(scraperName, "Jav123", StringComparison.OrdinalIgnoreCase))
                     {
@@ -430,6 +432,9 @@ namespace JavScraper.Tools.Services
             // 处理标题和标签
             await ProcessTitleAndTags(metadata, videoInfo);
 
+            // 下载示例图片
+            await DownloadSampleImages(metadata.JavVideo.Samples, videoInfo.DirectoryName);
+
             // 处理封面图片
             await ProcessCoverImage(metadata, videoInfo);
 
@@ -442,7 +447,7 @@ namespace JavScraper.Tools.Services
             metadata.Title = videoInfo.VideoTitle;
             metadata.OriginalTitle = videoInfo.VideoOriginalTitle;
 
-            PrintUpdatedMetadata(metadata, videoInfo.VideoSortTitle);
+            //PrintUpdatedMetadata(metadata, videoInfo.VideoSortTitle);
         }
 
         /// <summary>
@@ -641,13 +646,11 @@ namespace JavScraper.Tools.Services
         /// <param name="videoInfo">基于元数据与文件上下文构建的 VideoInfo。</param>
         /// <returns>表示异步操作的任务。</returns>
         /// <remarks>方法会调用 <see cref="ProcessVideoTags"/> 更新标签并调用 <see cref="DownloadSampleImages"/> 下载示例图。</remarks>
-        private async Task ProcessTitleAndTags(MetadataInfo metadata, VideoInfo videoInfo)
+        private static async Task ProcessTitleAndTags(MetadataInfo metadata, VideoInfo videoInfo)
         {
             // 处理标签
             ProcessVideoTags(metadata, videoInfo);
 
-            // 下载示例图片
-            await DownloadSampleImages(metadata.JavVideo.Samples, videoInfo.DirectoryName);
         }
 
         /// <summary>
@@ -659,9 +662,9 @@ namespace JavScraper.Tools.Services
         /// - 会检测目录下常见字幕文件扩展名以判断是否存在外挂字幕，并添加对应标签；
         /// - 最后通过 <see cref="ApplyTagMappings"/> 将简写标签替换为完整标签。
         /// </remarks>
-        private void ProcessVideoTags(MetadataInfo metadata, VideoInfo videoInfo)
+        private static void ProcessVideoTags(MetadataInfo metadata, VideoInfo videoInfo)
         {
-            var tags = new List<string>(metadata.Tags ?? new List<string>());
+            var tags = new List<string>(metadata.Tags ?? []);
 
             // 添加中文字幕标签
             if (videoInfo.HasChineseSubtitle && !tags.Contains(CHINESE_SUBTITLE_TAG))
@@ -696,7 +699,7 @@ namespace JavScraper.Tools.Services
         /// </summary>
         /// <param name="tags">要处理的标签列表，方法会原地修改该列表中的元素。</param>
         /// <remarks>映射规则由静态字典 <see cref="TagMappings"/> 提供，新的映射可在该字典中添加。</remarks>
-        private void ApplyTagMappings(List<string> tags)
+        private static void ApplyTagMappings(List<string> tags)
         {
             for (int i = 0; i < tags.Count; i++)
             {
@@ -715,28 +718,149 @@ namespace JavScraper.Tools.Services
         /// <returns>表示异步操作的任务。</returns>
         private async Task ProcessCoverImage(MetadataInfo metadata, VideoInfo videoInfo)
         {
-            if (string.IsNullOrEmpty(metadata.JavVideo.Cover))
-                return;
+            //if (string.IsNullOrEmpty(metadata.JavVideo.Cover))
+            //    return;
+            Dictionary<string, string> coverDict = new Dictionary<string, string>();
 
-            var coverPath = Path.Combine(videoInfo.DirectoryName, $"{videoInfo.BaseFileName}-poster.jpg");
-
-            if (File.Exists(coverPath))
-                return;
-
-            try
+            // 有码的直接在 DMM 下载原图
+            if (metadata.JavId.Type == JavIdType.Censored)
             {
-                await Downloader.DownloadJpegAsync(metadata.JavVideo.Cover, videoInfo.DirectoryName, $"{videoInfo.BaseFileName}-poster");
-                LogInformation($"下载封面图片: {coverPath}");
+                var picUrls = DMMImageUtils.GetDMMBigImages(metadata.JavVideo.Cover);
+                if (picUrls != null && picUrls.Count > 0)
+                {
+                    foreach (var picUrl in picUrls)
+                    {
+                        if (await HttpUtils.IsUrlAvailableAsync(picUrl.Value))
+                        {
+                            var cover = await Downloader.DownloadJpegAsync(picUrl.Value, videoInfo.DirectoryName);
+                            if (cover != null)
+                            {
+                                coverDict.Add(picUrl.Key, cover);
+                            }
+                        }
+                    }
+                }
             }
-            catch (Exception ex)
+            // 无码的下载获取到的封面
+            else if (metadata.JavId.Type == JavIdType.Uncensored)
             {
-                LogError("下载封面图片失败", ex);
+                var cover = await Downloader.DownloadJpegAsync(metadata.JavVideo.Cover, videoInfo.DirectoryName, metadata.JavId.Id.ToUpper());
+                if (cover != null)
+                {
+                    coverDict.Add("fanart", cover);
+                }
             }
+            var fileName = $"fanart"; // 命名规则
+            var savePath = Path.Combine(videoInfo.DirectoryName, fileName);
+            var saveName = $"{savePath}.jpg";
+            if (coverDict != null && coverDict.Count > 0)
+            {
+                File.Copy(coverDict["fanart"], saveName, true);
+            }
+            else
+            {
+                await Downloader.DownloadJpegAsync(metadata.JavVideo.Cover, videoInfo.DirectoryName, savePath);
+            }
+
+
+            if (File.Exists(saveName))
+            {
+                var thumbPicture = Path.Combine(videoInfo.DirectoryName, "thumb.jpg");
+                File.Copy(saveName, thumbPicture, true);
+                var targetRatio = 2f / 3f;
+                var folderPicture = Path.Combine(videoInfo.DirectoryName, "folder.jpg");
+                var posterPicture = Path.Combine(videoInfo.DirectoryName, "poster.jpg");
+                if (metadata.JavId.Type == JavIdType.Censored)
+                {
+                    if (coverDict != null && coverDict.Count > 0)
+                    {
+                        // 检查 poster 图片分辨率
+                        var posterPath = coverDict["poster"];
+                        using (var image = System.Drawing.Image.FromFile(posterPath))
+                        {
+                            if (image.Height < 400 || image.Width < 300)
+                            {
+                                // 如果分辨率太低，使用 fanart 裁切
+                                ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
+                                File.Copy(folderPicture, posterPicture, true);
+                            }
+                            else
+                            {
+                                // 分辨率符合要求，直接使用 poster
+                                File.Copy(coverDict["poster"], folderPicture, true);
+                                File.Copy(coverDict["poster"], posterPicture, true);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ImageUtils.CropImage(saveName, folderPicture, targetRatio, CropMode.Right);
+                        File.Copy(folderPicture, posterPicture, true);
+                    }
+                }
+                else
+                {
+                    File.Copy(saveName, folderPicture, true);
+                    File.Copy(saveName, posterPicture, true);
+                }
+
+                // 替换 JavHelper 获取的带水印的封面和缩略图 -fanart.jpg、-poster.jpg 和 -thumb.jpg
+
+                var javHelperFanart = Path.Combine(videoInfo.DirectoryName, $"{videoInfo.BaseFileName}-fanart.jpg");
+                var javHelperThumb = Path.Combine(videoInfo.DirectoryName, $"{videoInfo.BaseFileName}-thumb.jpg");
+                var javHelperPoster = Path.Combine(videoInfo.DirectoryName, $"{videoInfo.BaseFileName}-poster.jpg");
+
+                // 使用 fanart 替换对应文件
+                if (File.Exists(thumbPicture))
+                {
+                    File.Copy(saveName, javHelperFanart, true);
+                    File.Copy(saveName, javHelperThumb, true);
+                }
+
+                // 使用 folderPicture 替换 poster
+                if (File.Exists(folderPicture))
+                {
+                    File.Copy(folderPicture, javHelperPoster, true);
+                    File.Copy(posterPicture, javHelperPoster, true);
+                }
+            }
+
+
+            // 设置基础文件名（不带扩展名），用于生成 poster 和 fanart 的文件名
+            var baseName = videoInfo.BaseFileName;
+
+            //var saveNames = new List<string>();
+            //// 根据封面图片的宽高比决定保存为 poster 还是 fanart，并生成对应的文件名列表
+            //if (!ImageUtils.IsLandscape(metadata.JavVideo.Cover))
+            //{
+            //    saveNames.Add(baseName + "-thumb");
+            //    saveNames.Add(baseName + "-fanart");
+            //    saveNames.Add("thumb");
+            //    saveNames.Add("fanart");
+            //    saveName = Path.Combine(videoInfo.DirectoryName, baseName + "-fanart");
+            //}
+            //else
+            //{
+            //    saveNames.Add(baseName + "-poster");
+            //    saveNames.Add("poster");
+            //    saveName = Path.Combine(videoInfo.DirectoryName, baseName + "-poster");
+            //}
+
+            //try
+            //{
+            //    // Downloader -> ImageUtils will determine orientation, skip if targets exist, and save variants.
+            //    var saved = await Downloader.DownloadJpegAsync(metadata.JavVideo.Cover, videoInfo.DirectoryName, saveName);
+            //    if (!string.IsNullOrEmpty(saved))
+            //    {
+            //        LogInformation("下载封面图片: " + saved);
+            //    }
+            //    ImageUtils.SaveCoverVariants(saved, videoInfo.DirectoryName, baseName, saveNames);
+            //}
+            //catch (Exception ex)
+            //{
+            //    LogError("下载封面图片失败", ex);
+            //}
         }
-
-
-
-
 
         /// <summary>
         /// 并行下载示例图片（samples），并将其保存到配置指定的目录或当前目录。
@@ -857,7 +981,7 @@ namespace JavScraper.Tools.Services
             /// <summary>标签列表</summary>
             public List<string> Tags { get; set; }
             /// <summary>JAV 视频详细信息</summary>
-            public JavVideo JavVideo { get; set; }
+            public Entities.JavVideo JavVideo { get; set; }
         }
 
         /// <summary>

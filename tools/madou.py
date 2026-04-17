@@ -646,7 +646,7 @@ if __name__ == "__main__":
     # 创建命令行参数解析器
     parser = argparse.ArgumentParser(description='从 madouqu.com 网站抓取指定番号的信息和图片')
     parser.add_argument('-i', '--id', help='要抓取的番号，例如 "91KCM-142"')
-    parser.add_argument('-d', '--directory', default='G:\\Jav\\111', help='要处理的目录路径，将遍历该目录中的文件并提取番号')
+    parser.add_argument('-d', '--directory', default='G:\\Jav\\1111', help='要处理的目录路径，将遍历该目录中的文件并提取番号')
     parser.add_argument('-s', '--save', default='G:\\Jav\\122', help='保存目录路径，默认为"./downloaded"')
     parser.add_argument('-u', '--url', help='源文件 URL，如果不提供则自动根据番号生成')
     parser.add_argument('-f', '--file', help='源文件路径，如果提供，将会被移动到新创建的文件夹中')

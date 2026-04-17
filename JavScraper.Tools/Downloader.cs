@@ -55,7 +55,6 @@ namespace JavScraper.Tools
                 return string.Empty;
             }
         }
-
         /// <summary>
         /// 下载图片并保存为 JPG 格式。
         /// </summary>
@@ -98,6 +97,47 @@ namespace JavScraper.Tools
 
             return string.Empty;
         }
+        ///// <summary>
+        ///// 下载图片并保存为 JPG 格式。
+        ///// </summary>
+        ///// <param name="url">图片地址</param>
+        ///// <param name="savePath">保存路径</param>
+        ///// <param name="fileNameWithoutExt">可选的文件名（不含扩展名），如果不传则使用 URL 中的原文件名</param>
+        //public static async Task<string> DownloadJpegAsync(string url, string savePath, string fileNameWithoutExt = null)
+        //{
+        //    using HttpClient httpClient = new();
+        //    httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
+
+        //    try
+        //    {
+        //        using var response = await httpClient.GetAsync(url);
+        //        if (response.IsSuccessStatusCode)
+        //        {
+        //            using var mem = new MemoryStream();
+        //            await response.Content.CopyToAsync(mem);
+        //            mem.Seek(0, SeekOrigin.Begin);
+
+        //            if (!Directory.Exists(savePath))
+        //                Directory.CreateDirectory(savePath);
+
+        //            if (string.IsNullOrWhiteSpace(fileNameWithoutExt))
+        //            {
+        //                string fileName = Path.GetFileNameWithoutExtension(new Uri(url).LocalPath);
+        //                fileNameWithoutExt = fileName;
+        //            }
+
+        //            // Use System.Drawing path via ImageUtils to decide orientation and save multiple variants
+        //            var saved = ImageUtils.SaveCover(mem, savePath, fileNameWithoutExt);
+        //            return saved;
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"下载或转换失败：{ex.Message}");
+        //    }
+
+        //    return string.Empty;
+        //}
 
         ///// <summary>
         ///// 下载图片并保存为 JPG 格式。

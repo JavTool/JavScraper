@@ -510,11 +510,11 @@ namespace JavScraper.Tools
                 }
 
                 // 备份 nfo 文件
-                var destFileName = string.Format(@"{0}\{1}{2}", nfoFileInfo.DirectoryName, Path.GetFileNameWithoutExtension(nfoFile) + ".bak", nfoFileInfo.Extension);
-                if (!File.Exists(destFileName))
-                {
-                    nfoFileInfo.CopyTo(destFileName);
-                }
+                //var destFileName = string.Format(@"{0}\{1}{2}", nfoFileInfo.DirectoryName, Path.GetFileNameWithoutExtension(nfoFile) + ".bak", nfoFileInfo.Extension);
+                //if (!File.Exists(destFileName))
+                //{
+                //    nfoFileInfo.CopyTo(destFileName);
+                //}
 
                 Console.WriteLine($"当前处理的文件：{nfoFile}");
 
@@ -617,8 +617,8 @@ namespace JavScraper.Tools
                 }
 
                 // 根据需求将结果分配给两个变量
-                videoTags = new List<string>(tagList.Distinct());
-                videoGenres = new List<string>(tagList.Distinct());
+                videoTags = [.. tagList.Distinct()];
+                videoGenres = [.. tagList.Distinct()];
 
                 nfoVideoInfo.Title = nfoVideoInfo.Title.Replace("無碼 ", "").Replace("無修正 カリビアンコム ", "").Trim();
                 nfoVideoInfo.OriginalTitle = nfoVideoInfo.OriginalTitle.Replace("無碼 ", "").Replace("無修正 カリビアンコム ", "").Trim();
@@ -1181,7 +1181,7 @@ namespace JavScraper.Tools
                                 .Where(f => !f.Contains("images_backup_"))
                                 .ToList();
 
-                            if (imageFiles.Any())
+                            if (imageFiles.Count != 0)
                             {
                                 // 创建临时目录
                                 var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());

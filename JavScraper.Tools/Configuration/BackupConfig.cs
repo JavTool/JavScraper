@@ -13,7 +13,7 @@ namespace JavScraper.Tools.Configuration
         /// <summary>
         /// 是否备份图片（封面/示例图）
         /// </summary>
-        public bool BackupImages { get; set; } = false;
+        public bool BackupImages { get; set; } = true;
 
         public static BackupConfig LoadFromFile(string configFilePath = "config.json")
         {
