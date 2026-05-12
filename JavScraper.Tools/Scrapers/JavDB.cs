@@ -163,7 +163,7 @@ namespace JavScraper.Tools.Scrapers
         {
             // https://javdb.com/search?q=080916_356&f=all
             var searchUrl = $"https://javdb.com/search?q={javId}&f=all";
-            var doc = await GetHtmlDocumentAsync(searchUrl);
+            var doc = await GetRenderedHtmlByPlaywrightAsync(searchUrl);
             if (doc == null)
                 return null;
 
@@ -179,7 +179,8 @@ namespace JavScraper.Tools.Scrapers
         public override async Task<JavVideo> ParsePage(string url)
         {
             //https://javdb.com/v/BzbA6
-            var doc = await GetHtmlDocumentAsync(url);
+            var pageUrl = $"https://javdb.com/{url}";
+            var doc = await GetRenderedHtmlByPlaywrightAsync(pageUrl);
             if (doc == null)
                 return null;
 
@@ -278,8 +279,16 @@ namespace JavScraper.Tools.Scrapers
                 Actors = GetActors(),
                 Samples = GetSamples(),
             };
-
-            javVideo.Plot = await GetDmmPlot(javVideo.Number);
+            try
+            {
+                javVideo.Plot = await GetDmmPlot(javVideo.Number);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine($"获取影片介绍异常，番号 {javVideo.Number}");
+                //throw;
+            }
+           
             ////去除标题中的番号
             if (string.IsNullOrWhiteSpace(javVideo.Number) == false && javVideo.Title?.StartsWith(javVideo.Number, StringComparison.OrdinalIgnoreCase) == true)
                 javVideo.Title = javVideo.Title.Substring(javVideo.Number.Length).Trim();

@@ -168,7 +168,81 @@ namespace JavScraper.Tools
         }
 
 
+        /// <summary>
+        /// 获取 NFO 中的原始标题（<c>originaltitle</c>），通常为抓取到的站点原始名称。
+        /// </summary>
+        /// <returns>原始标题文本。</returns>
+        public string GetSet()
+        {
+            return GetElement("set").Value;
+        }
 
+        /// <summary>
+        /// 设置 <c>originaltitle</c> 并保存 NFO 文件。
+        /// </summary>
+        /// <param name="value">原始标题文本。</param>
+        public void SetSet(string value)
+        {
+            GetElement("set").Value = value;
+            SaveNfoFile();
+        }
+
+        /// <summary>
+        /// 获取 NFO 中的原始标题（<c>director</c>），通常为抓取到的站点原始名称。
+        /// </summary>
+        /// <returns>原始标题文本。</returns>
+        public string GetDirector()
+        {
+            return GetElement("director").Value;
+        }
+
+        /// <summary>
+        /// 设置 <c>director</c> 并保存 NFO 文件。
+        /// </summary>
+        /// <param name="value">原始标题文本。</param>
+        public void SetDirector(string value)
+        {
+            GetElement("director").Value = value;
+            SaveNfoFile();
+        }
+
+        /// <summary>
+        /// 获取 NFO 中的原始标题（<c>studio</c>），通常为抓取到的站点原始名称。
+        /// </summary>
+        /// <returns>原始标题文本。</returns>
+        public string GetStudio()
+        {
+            return GetElement("studio").Value;
+        }
+
+        /// <summary>
+        /// 设置 <c>studio</c> 并保存 NFO 文件。
+        /// </summary>
+        /// <param name="value">原始标题文本。</param>
+        public void SetStudio(string value)
+        {
+            GetElement("studio").Value = value;
+            SaveNfoFile();
+        }
+
+        /// <summary>
+        /// 获取 NFO 中的发行时间（<c>releasedate</c>），通常为抓取到的站点原始名称。
+        /// </summary>
+        /// <returns>发行时间文本。</returns>
+        public string GetReleaseDate()
+        {
+            return GetElement("releasedate").Value;
+        }
+
+        /// <summary>
+        /// 设置 <c>releasedate</c> 并保存 NFO 文件。
+        /// </summary>
+        /// <param name="value">发行时间文本。</param>
+        public void SetReleaseDate(string value)
+        {
+            GetElement("releasedate").Value = value;
+            SaveNfoFile();
+        }
 
         /// <summary>
         /// 获取 NFO 中所有的 <c>genre</c> 节点值，作为类型/分类列表返回。
@@ -286,7 +360,7 @@ namespace JavScraper.Tools
         /// <param name="tags">标签列表，将替换现有 tag 节点。</param>
         /// <param name="year">可选年份信息。</param>
         /// <param name="date">可选发布日期，若提供会写入 releasedate 与 premiered 节点。</param>
-        public void SaveMetadata(string title, string originalTitle, string sortTitle, string plot, string metatubeId, List<string> actors, List<string> genres, List<string> tags, int? year = null, string date = null)
+        public void SaveMetadata(string title, string originalTitle, string sortTitle, string plot, string metatubeId, List<string> actors, List<string> genres, List<string> tags, string set = null, string director = null, string studio = null, int? year = null, string date = null)
         {
             GetElement("title").Value = title;
             GetElement("originaltitle").Value = originalTitle;
@@ -298,6 +372,18 @@ namespace JavScraper.Tools
             if (!String.IsNullOrEmpty(plot))
             {
                 GetElement("plot").Value = plot;
+            }
+            if (!String.IsNullOrEmpty(set))
+            {
+                GetElement("set").Value = set;
+            }
+            if (!String.IsNullOrEmpty(director))
+            {
+                GetElement("director").Value = director;
+            }
+            if (!String.IsNullOrEmpty(studio))
+            {
+                GetElement("studio").Value = studio;
             }
             if (year.HasValue)
             {
@@ -327,6 +413,8 @@ namespace JavScraper.Tools
                 _nfoContent.Add(new XElement("tag", tag));
             }
 
+            GetElement("lockdata").Value = "true";
+            GetElement("lockedfields").Value = "Name|OriginalTitle|SortName|Cast";
             SaveNfoFile();
         }
 

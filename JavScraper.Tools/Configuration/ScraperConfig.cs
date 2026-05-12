@@ -13,7 +13,7 @@ namespace JavScraper.Tools.Configuration
         /// 优先使用的刮削器名称列表（按顺序尝试）。
         /// 可使用的名称示例："Jav123", "JavCaptain"。
         /// </summary>
-        public List<string> PreferredScrapers { get; set; } = ["DMM", "Jav123", "JavCaptain"];
+        public List<string> PreferredScrapers { get; set; } = ["DMM", "JavDB", "JavBus",  "JavCaptain", "Jav123"];
 
         /// <summary>
         /// 从配置文件加载 ScraperConfig（默认从 config.json 的 ScraperSettings 节点读取）。

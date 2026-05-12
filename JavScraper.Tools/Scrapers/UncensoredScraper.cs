@@ -288,105 +288,105 @@ namespace JavScraper.Tools.Scrapers
             return javVideo;
         }
 
-        /// <summary>
-        /// 获取 Caribbeancom 元数据
-        /// </summary>
-        /// <param name="javId">JAV ID</param>
-        /// <returns>视频信息</returns>
-        public async Task<JavVideo> GetCaribbeanMetadata(string javId)
-        {
-            var searchResults = await Query(javId);
-            var video = searchResults?.FirstOrDefault(v => 
-                v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
-                v.Maker?.Contains("カリビアンコム", StringComparison.OrdinalIgnoreCase) == true);
+        ///// <summary>
+        ///// 获取 Caribbeancom 元数据
+        ///// </summary>
+        ///// <param name="javId">JAV ID</param>
+        ///// <returns>视频信息</returns>
+        //public async Task<JavVideo> GetCaribbeanMetadata(string javId)
+        //{
+        //    var searchResults = await Query(javId);
+        //    var video = searchResults?.FirstOrDefault(v => 
+        //        v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
+        //        v.Maker?.Contains("カリビアンコム", StringComparison.OrdinalIgnoreCase) == true);
             
-            if (video?.Url != null)
-            {
-                return await ParsePage(video.Url);
-            }
+        //    if (video?.Url != null)
+        //    {
+        //        return await ParsePage(video.Url);
+        //    }
             
-            return null;
-        }
+        //    return null;
+        //}
 
         /// <summary>
         /// 获取 1Pondo 元数据
         /// </summary>
         /// <param name="javId">JAV ID</param>
-        /// <returns>视频信息</returns>
-        public async Task<JavVideo> Get1PondoMetadata(string javId)
-        {
-            var searchResults = await Query(javId);
-            var video = searchResults?.FirstOrDefault(v => 
-                v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
-                v.Maker?.Contains("一本道", StringComparison.OrdinalIgnoreCase) == true);
+        ///// <returns>视频信息</returns>
+        //public async Task<JavVideo> Get1PondoMetadata(string javId)
+        //{
+        //    var searchResults = await Query(javId);
+        //    var video = searchResults?.FirstOrDefault(v => 
+        //        v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
+        //        v.Maker?.Contains("一本道", StringComparison.OrdinalIgnoreCase) == true);
             
-            if (video?.Url != null)
-            {
-                return await ParsePage(video.Url);
-            }
+        //    if (video?.Url != null)
+        //    {
+        //        return await ParsePage(video.Url);
+        //    }
             
-            return null;
-        }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 获取 Pacopacomama 元数据
-        /// </summary>
-        /// <param name="javId">JAV ID</param>
-        /// <returns>视频信息</returns>
-        public async Task<JavVideo> GetPacopacomamaMetadata(string javId)
-        {
-            var searchResults = await Query(javId);
-            var video = searchResults?.FirstOrDefault(v => 
-                v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
-                v.Maker?.Contains("パコパコママ", StringComparison.OrdinalIgnoreCase) == true);
+        ///// <summary>
+        ///// 获取 Pacopacomama 元数据
+        ///// </summary>
+        ///// <param name="javId">JAV ID</param>
+        ///// <returns>视频信息</returns>
+        //public async Task<JavVideo> GetPacopacomamaMetadata(string javId)
+        //{
+        //    var searchResults = await Query(javId);
+        //    var video = searchResults?.FirstOrDefault(v => 
+        //        v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
+        //        v.Maker?.Contains("パコパコママ", StringComparison.OrdinalIgnoreCase) == true);
             
-            if (video?.Url != null)
-            {
-                return await ParsePage(video.Url);
-            }
+        //    if (video?.Url != null)
+        //    {
+        //        return await ParsePage(video.Url);
+        //    }
             
-            return null;
-        }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 获取 CaribbeancomPR 元数据
-        /// </summary>
-        /// <param name="javId">JAV ID</param>
-        /// <returns>视频信息</returns>
-        public async Task<JavVideo> GetCaribbeancomPRMetadata(string javId)
-        {
-            var searchResults = await Query(javId);
-            var video = searchResults?.FirstOrDefault(v => 
-                v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
-                v.Maker?.Contains("カリビアンコムプレミアム", StringComparison.OrdinalIgnoreCase) == true);
+        ///// <summary>
+        ///// 获取 CaribbeancomPR 元数据
+        ///// </summary>
+        ///// <param name="javId">JAV ID</param>
+        ///// <returns>视频信息</returns>
+        //public async Task<JavVideo> GetCaribbeancomPRMetadata(string javId)
+        //{
+        //    var searchResults = await Query(javId);
+        //    var video = searchResults?.FirstOrDefault(v => 
+        //        v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
+        //        v.Maker?.Contains("カリビアンコムプレミアム", StringComparison.OrdinalIgnoreCase) == true);
             
-            if (video?.Url != null)
-            {
-                return await ParsePage(video.Url);
-            }
+        //    if (video?.Url != null)
+        //    {
+        //        return await ParsePage(video.Url);
+        //    }
             
-            return null;
-        }
+        //    return null;
+        //}
 
-        /// <summary>
-        /// 获取 Heyzo 元数据
-        /// </summary>
-        /// <param name="javId">JAV ID</param>
-        /// <returns>视频信息</returns>
-        public async Task<JavVideo> GetHeyzoMetadata(string javId)
-        {
-            var searchResults = await Query(javId);
-            var video = searchResults?.FirstOrDefault(v => 
-                v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
-                v.Maker?.Contains("HEYZO", StringComparison.OrdinalIgnoreCase) == true);
+        ///// <summary>
+        ///// 获取 Heyzo 元数据
+        ///// </summary>
+        ///// <param name="javId">JAV ID</param>
+        ///// <returns>视频信息</returns>
+        //public async Task<JavVideo> GetHeyzoMetadata(string javId)
+        //{
+        //    var searchResults = await Query(javId);
+        //    var video = searchResults?.FirstOrDefault(v => 
+        //        v.Number?.Equals(javId, StringComparison.OrdinalIgnoreCase) == true ||
+        //        v.Maker?.Contains("HEYZO", StringComparison.OrdinalIgnoreCase) == true);
             
-            if (video?.Url != null)
-            {
-                return await ParsePage(video.Url);
-            }
+        //    if (video?.Url != null)
+        //    {
+        //        return await ParsePage(video.Url);
+        //    }
             
-            return null;
-        }
+        //    return null;
+        //}
 
         /// <summary>
         /// 获取 AvEntertainment 元数据

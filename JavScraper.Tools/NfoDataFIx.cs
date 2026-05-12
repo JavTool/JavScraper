@@ -656,7 +656,7 @@ namespace JavScraper.Tools
                 }
 
                 // 保存元数据
-                nfoManager.SaveMetadata(nfoVideoInfo.Title, nfoVideoInfo.OriginalTitle, nfoVideoInfo.SortTitle, nfoVideoInfo.Plot, javId.Id, nfoVideoInfo.Actors, videoGenres, videoTags, nfoVideoInfo.GetYear(), nfoVideoInfo.Date);
+                //nfoManager.SaveMetadata(nfoVideoInfo.Title, nfoVideoInfo.OriginalTitle, nfoVideoInfo.SortTitle, nfoVideoInfo.Plot, javId.Id, nfoVideoInfo.Actors, videoGenres, videoTags, nfoVideoInfo.GetYear(), nfoVideoInfo.Date);
 
                 #region 遍历其他 nfo 文件...
                 nfoFiles.Remove(nfoFile);
@@ -1353,7 +1353,7 @@ namespace JavScraper.Tools
                 #endregion
 
                 // 保存元数据
-                nfoManager.SaveMetadata(videoTitle, videoOriginalTitle, videoSortTitle, videoPlot, javId.Id, videoActors, videoGenres, videoTags, videoYear, videoDate);
+                nfoManager.SaveMetadata(videoTitle, videoOriginalTitle, videoSortTitle, videoPlot, javId.Id, videoActors, videoGenres, videoTags, null, null, null, videoYear, videoDate);
 
                 #region 遍历其他 nfo 文件...
                 nfoFiles.Remove(nfoFile);

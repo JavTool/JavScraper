@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <plot/>
+  <outline/>
+  <lockdata>true</lockdata>
+  <dateadded/>
+  <title>Members Area</title>
+  <originaltitle>Members Area</originaltitle>
+  <year/>
+  <sorttitle>Members Area</sorttitle>
+  <mpaa>XXX</mpaa>
+  <premiered/>
+  <releasedate/>
+  <runtime/>
+  <studio>VixenPlus</studio>
+  <uniqueid type="VixenPlusScraper-Url">https://members.vixenplus.com/videos/hospitality</uniqueid>
+  <uniqueid type="VixenPlusScraper-Json">{"OriginalTitle": "Members Area", "Cover": "", "Date": ""}</uniqueid>
+</movie>

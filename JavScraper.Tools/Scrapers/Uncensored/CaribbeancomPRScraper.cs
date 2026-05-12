@@ -28,7 +28,7 @@ namespace JavScraper.Tools.Scrapers.Uncensored
             if (!CanHandle(javId))
                 return null;
 
-            return await javUncensoredScraper.GetCaribbeancomPRMetadata(javId);
+            return await javUncensoredScraper.GetCaribbeanPRMetadata(javId);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace JavScraper.Tools.Configuration
         /// <summary>
         /// 是否启用演员名称替换功能
         /// </summary>
-        public bool Enabled { get; set; } = false;
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// 替换映射：键为目标（统一）名称，值为该目标名称所有的别名列表

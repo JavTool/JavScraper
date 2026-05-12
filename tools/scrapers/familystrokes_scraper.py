@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Blacked.com 详情页刮削器
+hotwifexxx.com 详情页刮削器
 用法：
-    python blackedscraper.py <video_url> <output_dir>
+    python hotwifexxx_scraper.py <video_url> <output_dir>
 示例：
-    python blackedscraper.py "https://www.blacked.com/videos/caught-in-the-moment" "G:/Jav/Blacked.19.05.14.Caught.In.The.Moment.XXX.1080p"
+    python hotwifexxx_scraper.py "https://www.hotwifexxx.com/videos/caught-in-the-moment" "G:/Jav/hotwifexxx.19.05.14.Caught.In.The.Moment.XXX.1080p"
 """
 
 import os
@@ -27,9 +27,9 @@ except ImportError:
     _HAS_CLOUDSCRAPER = False
 
 
-STUDIO = "Blacked"
-DOMAIN = "www.blacked.com"
-COOKIE_DOMAIN = ".blacked.com"
+STUDIO = "HotWifeXXX"
+DOMAIN = "www.hotwifexxx.com"
+COOKIE_DOMAIN = ".hotwifexxx.com"
 
 HEADERS = {
     "User-Agent": (
@@ -153,9 +153,9 @@ def _deep_find(obj, key: str, depth: int = 4):
 # 主要解析逻辑
 # ---------------------------------------------------------------------------
 
-def scrape_blacked(url: str, proxy: str = None) -> dict:
+def scrape_hotwifexxx(url: str, proxy: str = None) -> dict:
     """
-    刮削 Blacked.com 视频详情页，返回结构化数据字典：
+    刮削 hotwifexxx.com 视频详情页，返回结构化数据字典：
     {
         "title": str,
         "plot": str,
@@ -407,66 +407,75 @@ def _parse_from_json_ld(jld: dict, data: dict):
 
 def _parse_from_html(soup: BeautifulSoup, data: dict):
     """直接从 HTML 标签中提取元数据（兜底策略，演员部分始终覆盖）"""
-    # title
+    # title - 从 h1 标签获取
     if not data["title"]:
-        og_title = soup.find("meta", property="og:title")
-        if og_title:
-            data["title"] = og_title.get("content", "").strip()
-        if not data["title"]:
-            h1 = soup.find("h1")
-            if h1:
-                data["title"] = h1.get_text(strip=True)
+        h1 = soup.find("h1")
+        if h1:
+            data["title"] = h1.get_text(strip=True)
 
-    # description / plot
+    # description / plot - 从 meta description 获取
     if not data["plot"]:
-        og_desc = soup.find("meta", property="og:description")
-        if og_desc:
-            data["plot"] = og_desc.get("content", "").strip()
-        if not data["plot"]:
-            meta_desc = soup.find("meta", attrs={"name": "description"})
-            if meta_desc:
-                data["plot"] = meta_desc.get("content", "").strip()
+        meta_desc = soup.find("meta", attrs={"name": "description"})
+        if meta_desc:
+            data["plot"] = meta_desc.get("content", "").strip()
 
-    # cover image
+    # cover image - 从 id="trailer_thumb" 的 span 内第一个 img 标签获取
+    if not data["cover"]:
+        trailer_thumb = soup.find("span", id="trailer_thumb")
+        if trailer_thumb:
+            img = trailer_thumb.find("img")
+            if img and img.get("src"):
+                data["cover"] = img.get("src", "").strip()
+
+    # 兜底：若还未获取到，从 og:image 获取
     if not data["cover"]:
         og_img = soup.find("meta", property="og:image")
         if og_img:
             data["cover"] = og_img.get("content", "").strip()
 
-    # date
+    # date - 从 sceneDateP 内的 span 获取
     if not data["date"]:
-        time_tag = soup.find("time")
-        if time_tag:
-            raw = time_tag.get("datetime") or time_tag.get_text(strip=True)
-            data["date"] = _parse_date(raw)
+        scene_date = soup.find("div", class_="sceneDateP")
+        if scene_date:
+            date_span = scene_date.find("span")
+            if date_span:
+                date_text = date_span.get_text(strip=True).rstrip(',')
+                # 格式: MM/DD/YYYY
+                try:
+                    date_obj = datetime.strptime(date_text, "%m/%d/%Y")
+                    data["date"] = date_obj.strftime("%Y-%m-%d")
+                except ValueError:
+                    pass
 
-    # actors — 从包含 performer 链接的父容器中按顺序收集，遇到 "&" span 即停
-    perf_links = soup.find_all("a", href=re.compile(r'/(pornstars|models|performers?)/'))
-    if perf_links:
-        parent = perf_links[0].parent
-        female_actors = []
-        for child in parent.children:
-            if hasattr(child, 'get_text'):
-                text = child.get_text(strip=True)
-                if text == '&':
-                    break
-                if child.name == 'a' and re.search(r'/(pornstars|models|performers?)/', child.get('href', '')):
-                    if text and text not in female_actors:
-                        female_actors.append(text)
-        if female_actors:
-            data["actors"] = female_actors
-        elif not data["actors"]:
-            for a in perf_links:
-                name = a.get_text(strip=True)
-                if name and name not in data["actors"]:
-                    data["actors"].append(name)
+    # runtime - 从 sceneDateP 中提取分钟数
+    if not data["runtime"]:
+        scene_date = soup.find("div", class_="sceneDateP")
+        if scene_date:
+            text = scene_date.get_text()
+            # 查找 "XX min of video" 模式
+            import re
+            match = re.search(r'(\d+)\s*min', text)
+            if match:
+                data["runtime"] = match.group(1)
 
-    # genres
-    if not data["genres"]:
-        for a in soup.find_all("a", href=re.compile(r'/(categories|tags|genres?)/')):
-            name = a.get_text(strip=True)
-            if name and name not in data["genres"]:
-                data["genres"].append(name)
+    # actors - 从 sceneTextLink div 内的 tour_update_models span 获取
+    scene_text_div = soup.find("div", class_="sceneTextLink")
+    if scene_text_div:
+        tour_span = scene_text_div.find("span", class_="tour_update_models")
+        if tour_span:
+            links = tour_span.find_all("a")
+            actors = [link.get_text(strip=True) for link in links if link.get_text(strip=True)]
+            data["actors"] = actors
+
+    # genres - 从 meta keywords 获取
+    # if not data["genres"]:
+    #     meta_keywords = soup.find("meta", attrs={"name": "keywords"})
+    #     if meta_keywords:
+    #         keywords = meta_keywords.get("content", "")
+    #         if keywords:
+    #             # 按逗号分割，去除空字符串和首尾空格
+    #             genres = [tag.strip() for tag in keywords.split(',') if tag.strip()]
+    #             data["genres"] = genres
 
 
 # ---------------------------------------------------------------------------
@@ -476,7 +485,7 @@ def _parse_from_html(soup: BeautifulSoup, data: dict):
 def build_nfo_xml(info: dict, dir_name: str = "") -> str:
     """根据 info 字典构建 Kodi/Emby 兼容的 NFO XML 字符串
 
-    sorttitle 从 dir_name 中用正则提取 Blacked.YY.MM.DD 部分，
+    sorttitle 从 dir_name 中用正则提取 hotwifexxx.YY.MM.DD 部分，
     originaltitle = sorttitle + " " + title（不含 [中字] 前缀）
     目录名带 -C 后缀时：title 加 [中字]，sorttitle 加 -C 后缀
     """
@@ -538,7 +547,7 @@ def build_nfo_xml(info: dict, dir_name: str = "") -> str:
 
     # uniqueid: url
     uid_url = ET.SubElement(root, "uniqueid")
-    uid_url.set("type", "BlackedScraper-Url")
+    uid_url.set("type", "HotWifeXXXScraper-Url")
     uid_url.text = info.get("url", "")
 
     # uniqueid: json 摘要
@@ -549,7 +558,7 @@ def build_nfo_xml(info: dict, dir_name: str = "") -> str:
         "Date": date,
     }, ensure_ascii=False)
     uid_json = ET.SubElement(root, "uniqueid")
-    uid_json.set("type", "BlackedScraper-Json")
+    uid_json.set("type", "HotWifeXXXScraper-Json")
     uid_json.text = json_str
 
     # 美化输出
@@ -657,11 +666,11 @@ def download_gallery(gallery_urls: list, dir_name: str, proxy: str = None):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Blacked.com 视频详情页刮削器，将元数据保存为 Kodi/Emby NFO 文件"
+        description="hotwifexxx.com 视频详情页刮削器，将元数据保存为 Kodi/Emby NFO 文件"
     )
     parser.add_argument(
         "url",
-        help="Blacked 视频详情页 URL，例如 https://www.blacked.com/videos/caught-in-the-moment",
+        help="hotwifexxx 视频详情页 URL，例如 https://www.hotwifexxx.com/videos/caught-in-the-moment",
     )
     parser.add_argument("output_dir", help="输出目录，NFO 文件将以该目录名命名")
     parser.add_argument(
@@ -688,7 +697,7 @@ def main():
         print(f"[INFO] 使用代理: {args.proxy}")
 
     try:
-        info = scrape_blacked(args.url, proxy=args.proxy)
+        info = scrape_hotwifexxx(args.url, proxy=args.proxy)
     except requests.exceptions.HTTPError as e:
         print(f"[ERROR] HTTP 错误: {e}")
         sys.exit(1)

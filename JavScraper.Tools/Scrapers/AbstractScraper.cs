@@ -7,6 +7,7 @@ using JavScraper.Tools.Http;
 using JavScraper.Tools.Tools;
 using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Playwright;
 using PuppeteerSharp;
 using System;
 using System.Collections.Generic;
@@ -135,7 +136,7 @@ namespace JavScraper.Tools.Scrapers
             {
                 var jsonUrl = $"https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/{number}.json";
                 var url = $"https://www.1pondo.tv/movies/{number}/";
-                var doc = await GetRenderedHtmlAsync(url);
+                var doc = await GetRenderedHtmlByPlaywrightAsync(url);
 
                 if (doc == null)
                     return null;
@@ -424,7 +425,14 @@ namespace JavScraper.Tools.Scrapers
             {
                 // https://www.caribbeancom.com/moviepages/090215-962/index.html
                 var url = $"https://www.caribbeancom.com/moviepages/{number}/index.html";
-                var doc = await GetRenderedHtmlAsync(url);
+
+                // 注入年龄验证 Cookie 绕过弹窗
+                var cookies = new[]
+                {
+                    new Microsoft.Playwright.Cookie { Name = "cmp", Value = "1", Domain = ".caribbeancom.com", Path = "/" },
+                    new Microsoft.Playwright.Cookie { Name = "age_verification", Value = "1", Domain = ".caribbeancom.com", Path = "/" },
+                };
+                var doc = await GetRenderedHtmlWithCookiesAsync(url, cookies, waitForSelector: "div.movie-info", timeoutMs: 30000);
 
                 if (doc == null)
                     return null;
@@ -585,7 +593,7 @@ namespace JavScraper.Tools.Scrapers
             {
                 // https://www.pacopacomama.com/moviepages/090215-962/index.html
                 var url = $"https://www.pacopacomama.com/moviepages/{number}/index.html";
-                var doc = await GetRenderedHtmlAsync(url);
+                var doc = await GetRenderedHtmlByPlaywrightAsync(url);
 
                 if (doc == null)
                     return null;
@@ -749,7 +757,66 @@ namespace JavScraper.Tools.Scrapers
                 // https://www.heyzo.com/moviepages/3564/index.html
                 var heyzoId = number.Replace("heyzo-", "", StringComparison.OrdinalIgnoreCase);
                 var url = $"https://www.heyzo.com/moviepages/{heyzoId}/index.html";
-                var doc = await GetRenderedHtmlAsync(url);
+
+                // heyzo 年龄验证：先访问首页点击确认按钮获取 cookie，再访问目标页
+                HtmlDocument doc = null;
+                try
+                {
+                    var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+                    await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                    {
+                        Headless = true,
+                        ExecutablePath = File.Exists(BrowserExecutablePath) ? BrowserExecutablePath : null,
+                        Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled" },
+                    });
+                    var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                    {
+                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                        ViewportSize = new ViewportSize { Width = 1280, Height = 800 },
+                    });
+                    await context.AddInitScriptAsync(
+                        "Object.defineProperty(navigator, 'webdriver', { get: () => undefined })");
+
+                    var page = await context.NewPageAsync();
+
+                    // 第一步：访问首页，触发年龄验证弹窗并点击「はい」
+                    await page.GotoAsync("https://www.heyzo.com/", new PageGotoOptions
+                    {
+                        WaitUntil = WaitUntilState.DOMContentLoaded,
+                        Timeout = 20000,
+                    });
+                    // 尝试点击年龄确认按钮（selector 可能是 a.btn_yes 或 #agecheck a）
+                    try
+                    {
+                        var yesBtn = page.Locator("a.btn_yes, #agecheck a, a[href*='agecheck']").First;
+                        await yesBtn.ClickAsync(new LocatorClickOptions { Timeout = 5000 });
+                        await page.WaitForLoadStateAsync(LoadState.DOMContentLoaded);
+                    }
+                    catch { /* 没有弹窗或已通过验证，忽略 */ }
+
+                    // 第二步：带有已写入的 cookie 访问目标页
+                    await page.GotoAsync(url, new PageGotoOptions
+                    {
+                        WaitUntil = WaitUntilState.DOMContentLoaded,
+                        Timeout = 30000,
+                    });
+                    try
+                    {
+                        await page.WaitForSelectorAsync("div#movie", new PageWaitForSelectorOptions { Timeout = 15000 });
+                    }
+                    catch { /* 超时则直接读取内容 */ }
+
+                    var content = await page.ContentAsync();
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        doc = new HtmlDocument();
+                        doc.LoadHtml(content);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log?.LogError($"[Heyzo] Playwright 请求失败: {url}, 错误: {ex.Message}");
+                }
 
                 if (doc == null)
                     return null;
@@ -915,8 +982,13 @@ namespace JavScraper.Tools.Scrapers
         }
         private async Task<string> GetAVESearchAsync(string number)
         {
-            var searchUrl = $"https://www.aventertainments.com/search_Products.aspx?languageID=2&dept_id=29&keyword={number}&searchby=keyword";
-            var doc = await GetRenderedHtmlAsync(searchUrl);
+            // https://www.aventertainments.com/dvd/search?lang=2&cat=29&culture=ja-JP&keyword=CWP-152&searchby=keyword&page=1
+            var searchUrl = $"https://www.aventertainments.com/dvd/search?lang=2&cat=29&culture=ja-JP&keyword={number}&searchby=keyword&page=1";
+            // AVE 是 SPA，内容由 JS 异步渲染，必须等待搜索结果容器出现
+            var doc = await GetRenderedHtmlByPlaywrightAsync(
+                searchUrl,
+                waitForSelector: "div.single-slider-product__image",
+                timeoutMs: 45000);
             if (doc == null)
                 return null;
 
@@ -941,7 +1013,7 @@ namespace JavScraper.Tools.Scrapers
                     if (!string.IsNullOrEmpty(fileName) && fileName.ToLower().Contains(number.ToLower()))
                     {
                         return href.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                            ? href
+                            ? href.Replace("&amp;", "&")
                             : "https://www.aventertainments.com" + href;
                     }
                 }
@@ -1171,7 +1243,13 @@ namespace JavScraper.Tools.Scrapers
                 var aveShortNumber = GetAVEShortNumber(number);
                 // https://www.aventertainments.com/product_lists.aspx?product_id={number}
                 var url = await GetAVESearchAsync(aveShortNumber);
-                var doc = await GetRenderedHtmlAsync(url);
+                if (string.IsNullOrEmpty(url))
+                    return null;
+                // AVE 详情页也是 SPA，等待内容区加载完成
+                var doc = await GetRenderedHtmlByPlaywrightAsync(
+                    url,
+                    waitForSelector: "div.product-description",
+                    timeoutMs: 45000);
 
                 if (doc == null)
                     return null;
@@ -1288,6 +1366,7 @@ namespace JavScraper.Tools.Scrapers
                     Url = url,
                     Title = title,
                     Cover = cover,
+                    Plot = plot,
                     Number = number.ToUpper(),
                     Date = GetDate(),
                     Runtime = GetRuntime(),
@@ -1346,6 +1425,8 @@ namespace JavScraper.Tools.Scrapers
             // 空值处理
             if (string.IsNullOrWhiteSpace(title) || actors == null || actors.Count == 0)
                 return title?.Trim();
+
+            title = title.Replace("（DOD）", "");
 
             // 按名字长度倒序排序，避免短名字误删长名字
             var sortedActors = actors
@@ -1490,18 +1571,15 @@ namespace JavScraper.Tools.Scrapers
         {
             try
             {
-                // 指定你系统中 Chrome 或 Chromium 的完整路径
-                var executablePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
-
-                if (!File.Exists(executablePath))
+                if (!File.Exists(BrowserExecutablePath))
                 {
-                    log?.LogError($"检测不到浏览器安装路径：{executablePath}");
+                    log?.LogError($"检测不到浏览器安装路径：{BrowserExecutablePath}");
                 }
 
                 var launchOptions = new LaunchOptions
                 {
                     Headless = true,
-                    ExecutablePath = executablePath,
+                    ExecutablePath = BrowserExecutablePath,
                     Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
                 };
 
@@ -1524,6 +1602,166 @@ namespace JavScraper.Tools.Scrapers
 
             return null;
         }
+
+        #region Playwright 支持
+
+        /// <summary>
+        /// 浏览器可执行文件路径，供 Playwright 和 Puppeteer 共用。
+        /// 修改此属性可全局替换浏览器路径。
+        /// </summary>
+        public static string BrowserExecutablePath { get; set; } =
+            @"C:\Program Files\Google\Chrome\Application\chrome.exe";
+
+        /// <summary>
+        /// 使用 Playwright 获取渲染后的 HTML 文档，适用于需要 JavaScript 渲染的页面（如 JavBus）。
+        /// </summary>
+        /// <param name="url">目标页面地址。</param>
+        /// <param name="waitForSelector">可选：等待指定 CSS 选择器元素出现后再返回，若为 null 则等待 networkidle。</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认 30000ms。</param>
+        /// <returns>解析后的 HtmlDocument，失败时返回 null。</returns>
+        public async Task<HtmlDocument> GetRenderedHtmlByPlaywrightAsync(
+            string url,
+            string waitForSelector = null,
+            int timeoutMs = 30000)
+        {
+            try
+            {
+                var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+                await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = true,
+                    ExecutablePath = File.Exists(BrowserExecutablePath) ? BrowserExecutablePath : null,
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled" },
+                });
+
+                var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                {
+                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    ViewportSize = new ViewportSize { Width = 1280, Height = 800 },
+                });
+
+                // 屏蔽常见的反爬虫检测属性
+                await context.AddInitScriptAsync(
+                    "Object.defineProperty(navigator, 'webdriver', { get: () => undefined })");
+
+                var page = await context.NewPageAsync();
+
+                // 优先用 DOMContentLoaded，避免 SPA 站点 NetworkIdle 超时
+                await page.GotoAsync(url, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = timeoutMs,
+                });
+
+                // 等待目标元素，超时后降级直接读取内容
+                if (!string.IsNullOrEmpty(waitForSelector))
+                {
+                    try
+                    {
+                        await page.WaitForSelectorAsync(waitForSelector,
+                            new PageWaitForSelectorOptions { Timeout = timeoutMs });
+                    }
+                    catch
+                    {
+                        log?.LogWarning($"[Playwright] waitForSelector '{waitForSelector}' 超时，尝试读取当前页面内容: {url}");
+                    }
+                }
+
+                var content = await page.ContentAsync();
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(content);
+                    return doc;
+                }
+            }
+            catch (Exception ex)
+            {
+                log?.LogError($"[Playwright] 请求页面失败: {url}, 错误: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 使用 Playwright 模拟登录后获取页面 HTML，适用于需要 Cookie/Session 的页面。
+        /// </summary>
+        /// <param name="url">目标地址。</param>
+        /// <param name="cookies">预设的 Cookie 列表。</param>
+        /// <param name="waitForSelector">可选：等待指定元素。</param>
+        /// <param name="timeoutMs">超时时间（毫秒）。</param>
+        /// <returns>解析后的 HtmlDocument，失败时返回 null。</returns>
+        public async Task<HtmlDocument> GetRenderedHtmlWithCookiesAsync(
+            string url,
+            IEnumerable<Microsoft.Playwright.Cookie> cookies,
+            string waitForSelector = null,
+            int timeoutMs = 30000)
+        {
+            try
+            {
+                var playwright = await Microsoft.Playwright.Playwright.CreateAsync();
+                await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+                {
+                    Headless = true,
+                    ExecutablePath = File.Exists(BrowserExecutablePath) ? BrowserExecutablePath : null,
+                    Args = new[] { "--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled" },
+                });
+
+                var context = await browser.NewContextAsync(new BrowserNewContextOptions
+                {
+                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    ViewportSize = new ViewportSize { Width = 1280, Height = 800 },
+                });
+
+                // 屏蔽 webdriver 检测
+                await context.AddInitScriptAsync(
+                    "Object.defineProperty(navigator, 'webdriver', { get: () => undefined })");
+
+                if (cookies != null)
+                {
+                    await context.AddCookiesAsync(cookies);
+                }
+
+                var page = await context.NewPageAsync();
+
+                // 先用 DOMContentLoaded ，避免 NetworkIdle 超时
+                await page.GotoAsync(url, new PageGotoOptions
+                {
+                    WaitUntil = WaitUntilState.DOMContentLoaded,
+                    Timeout = timeoutMs,
+                });
+
+                // 等待指定元素，如果失败则直接读取当前内容
+                if (!string.IsNullOrEmpty(waitForSelector))
+                {
+                    try
+                    {
+                        await page.WaitForSelectorAsync(waitForSelector,
+                            new PageWaitForSelectorOptions { Timeout = timeoutMs });
+                    }
+                    catch
+                    {
+                        log?.LogWarning($"[Playwright] waitForSelector '{waitForSelector}' 超时，尝试读取当前页面内容: {url}");
+                    }
+                }
+
+                var content = await page.ContentAsync();
+                if (!string.IsNullOrWhiteSpace(content))
+                {
+                    var doc = new HtmlDocument();
+                    doc.LoadHtml(content);
+                    return doc;
+                }
+            }
+            catch (Exception ex)
+            {
+                log?.LogError($"[Playwright] 带 Cookie 请求失败: {url}, 错误: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        #endregion
 
         /// <summary>
         /// 展开全部的 Key。

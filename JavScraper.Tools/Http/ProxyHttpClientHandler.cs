@@ -39,6 +39,13 @@ namespace JavScraper.Tools.Http
             if (request.RequestUri.ToString().Contains("mgstage.com") && !(request.Headers.TryGetValues("Cookie", out var cookies) && cookies.Contains("abc=1")))
                 request.Headers.Add("Cookie", "adc=1");
 
+            if (request.RequestUri.ToString().Contains("javbus.com") && !(request.Headers.TryGetValues("Cookie", out var cookies1) && cookies1.Contains("over18=1")))
+                request.Headers.Add("Cookie", "over18=1");
+            if (request.RequestUri.ToString().Contains("javbus.com") && !(request.Headers.TryGetValues("Cookie", out var cookies3) && cookies3.Contains("existmag=mag")))
+                request.Headers.Add("Cookie", "existmag=mag");
+            if (request.RequestUri.ToString().Contains("javbus.com") && !(request.Headers.TryGetValues("Cookie", out var cookies4) && cookies4.Contains("PHPSESSID=jqomndi9p6c94vk7i4de0188r6")))
+                request.Headers.Add("Cookie", "PHPSESSID=jqomndi9p6c94vk7i4de0188r6");
+
             // dmm.co.jp 加入年龄认证 Cookies
             if (request.RequestUri.ToString().Contains("dmm.co.jp") && !(request.Headers.TryGetValues("Cookie", out var cookies2) && cookies2.Contains("age_check_done=1")))
                 request.Headers.Add("Cookie", "age_check_done=1");

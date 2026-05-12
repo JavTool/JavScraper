@@ -141,6 +141,11 @@ def main():
             '無碼破解': '无码',
             '无码破解': '无码',
             '无码流出': '无码',
+            '.mp4.mp4': '.mp4',
+            '.MP4.MP4': '.mp4',
+            '-': ' ',
+            'fellatio japan': 'Fellatio-Japan',
+            'Fellatio Japan': 'Fellatio-Japan',
         }
     
     if args.replace:

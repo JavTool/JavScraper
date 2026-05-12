@@ -183,7 +183,7 @@ namespace JavScraper.Tools.Scrapers
                 Url = url,
                 Title = doc.DocumentNode.SelectSingleNode("//div[contains(@class,'container-fluid')]//h1/strong")?.InnerText?.Replace("免费AV在线看", "").Trim(),
                 Cover = GetCover(),
-                Number = GetValue("番号")?.ToUpper(),
+                Number = GetValue("番号")?.ToUpper().Trim(),
                 Date = GetValue("日期"),
                 Runtime = GetValue("时长"),
                 Maker = GetValue("製作"),

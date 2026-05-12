@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Vixen.com 详情页刮削器
+Blacked.com 详情页刮削器
 用法：
-    python vixenscraper.py <video_url> <output_dir>
+    python blackedscraper.py <video_url> <output_dir>
 示例：
-    python vixenscraper.py "https://www.vixen.com/videos/mutual-generosity" "G:/Jav/Pepper Xo/Vixen.16.08.22.Pepper.Xo.Mutual.Generosity.XXX.1080p"
+    python tushyscraper.py "https://www.tushy.com/videos/hotel-vixen-episode-9-irresistible-jia" "\\192.168.1.199\Jav\Western\Hotel Vixen\Tushy.23.02.19.Jia.Lissa.Hotel.Vixen.Episode.9.Irresistible.Jia.XXX.1080p"
 """
 
 import os
@@ -18,7 +18,8 @@ from xml.dom import minidom
 from datetime import datetime
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
+
 try:
     import cloudscraper
     _HAS_CLOUDSCRAPER = True
@@ -26,7 +27,9 @@ except ImportError:
     _HAS_CLOUDSCRAPER = False
 
 
-STUDIO = "Vixen"
+STUDIO = "Blacked"
+DOMAIN = "www.blacked.com"
+COOKIE_DOMAIN = ".blacked.com"
 
 HEADERS = {
     "User-Agent": (
@@ -36,7 +39,7 @@ HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Referer": "https://www.vixen.com/",
+    "Referer": f"https://{DOMAIN}/",
 }
 
 
@@ -53,7 +56,7 @@ def fetch_page(url: str, proxy: str = None) -> str:
             browser={"browser": "chrome", "platform": "windows", "mobile": False}
         )
         scraper.headers.update(HEADERS)
-        scraper.cookies.set("consent", "1", domain=".vixen.com")
+        scraper.cookies.set("consent", "1", domain=COOKIE_DOMAIN)
         if proxies:
             scraper.proxies.update(proxies)
         resp = scraper.get(url, timeout=30, allow_redirects=True)
@@ -62,7 +65,7 @@ def fetch_page(url: str, proxy: str = None) -> str:
     else:
         session = requests.Session()
         session.headers.update(HEADERS)
-        session.cookies.set("consent", "1", domain=".vixen.com")
+        session.cookies.set("consent", "1", domain=COOKIE_DOMAIN)
         if proxies:
             session.proxies.update(proxies)
         resp = session.get(url, timeout=30, allow_redirects=True)
@@ -100,11 +103,9 @@ def _parse_date(raw: str) -> str:
     """将各种日期字符串规范化为 YYYY-MM-DD"""
     if not raw:
         return ""
-    # ISO 格式 2016-08-22T00:00:00Z
     m = re.match(r'(\d{4}-\d{2}-\d{2})', raw)
     if m:
         return m.group(1)
-    # August 22, 2016
     try:
         dt = datetime.strptime(raw.strip(), "%B %d, %Y")
         return dt.strftime("%Y-%m-%d")
@@ -113,23 +114,60 @@ def _parse_date(raw: str) -> str:
     return raw.strip()
 
 
+def _parse_runtime(rt: str) -> str:
+    """将 HH:MM:SS 或 ISO PT30M 格式转为分钟字符串"""
+    if not rt:
+        return ""
+    hms = re.match(r'(\d+):(\d+):(\d+)', str(rt))
+    if hms:
+        h, m, s = int(hms.group(1)), int(hms.group(2)), int(hms.group(3))
+        return str(h * 60 + m + (1 if s >= 30 else 0))
+    iso = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?', str(rt))
+    if iso:
+        hours = int(iso.group(1) or 0)
+        minutes = int(iso.group(2) or 0)
+        return str(hours * 60 + minutes)
+    return str(rt)
+
+
+def _deep_find(obj, key: str, depth: int = 4):
+    """在嵌套字典中深度查找指定 key"""
+    if depth <= 0:
+        return None
+    if isinstance(obj, dict):
+        if key in obj:
+            return obj[key]
+        for v in obj.values():
+            result = _deep_find(v, key, depth - 1)
+            if result is not None:
+                return result
+    elif isinstance(obj, list):
+        for item in obj:
+            result = _deep_find(item, key, depth - 1)
+            if result is not None:
+                return result
+    return None
+
+
 # ---------------------------------------------------------------------------
 # 主要解析逻辑
 # ---------------------------------------------------------------------------
 
-def scrape_vixen(url: str, proxy: str = None) -> dict:
+def scrape_blacked(url: str, proxy: str = None) -> dict:
     """
-    刮削 Vixen 视频详情页，返回结构化数据字典：
+    刮削 Blacked.com 视频详情页，返回结构化数据字典：
     {
         "title": str,
         "plot": str,
         "date": str,          # YYYY-MM-DD
-        "actors": list[str],
+        "actors": list[str],  # 只含 & 前面的女演员
         "genres": list[str],
-        "cover": str,         # 封面图 URL
+        "cover": str,         # 封面图 URL（最高分辨率横图）
         "url": str,
         "studio": str,
         "runtime": str,       # 分钟数字符串
+        "director": str,
+        "gallery_urls": list, # 剧照原图 URL 列表
     }
     """
     print(f"[INFO] 正在获取页面: {url}")
@@ -147,7 +185,7 @@ def scrape_vixen(url: str, proxy: str = None) -> dict:
         "studio": STUDIO,
         "runtime": "",
         "director": "",
-        "gallery_urls": [],   # 剧照原图 URL 列表
+        "gallery_urls": [],
     }
 
     # ── 1. 优先从 __NEXT_DATA__ 中解析 ──────────────────────────────────────
@@ -160,7 +198,7 @@ def scrape_vixen(url: str, proxy: str = None) -> dict:
     for jld in json_ld_list:
         _parse_from_json_ld(jld, data)
 
-    # ── 3. 若仍有缺失，用 BeautifulSoup 直接解析 HTML ────────────────────────
+    # ── 3. 兜底：用 BeautifulSoup 直接解析 HTML（演员始终用此结果覆盖）────────
     _parse_from_html(soup, data)
 
     return data
@@ -171,7 +209,6 @@ def _parse_from_next_data(next_data: dict, data: dict):
     try:
         page_props = next_data.get("props", {}).get("pageProps", {})
 
-        # vixen.com 的数据直接在 pageProps.video 下
         video_obj = (
             page_props.get("video")
             or page_props.get("videoData")
@@ -204,25 +241,15 @@ def _parse_from_next_data(next_data: dict, data: dict):
             data["date"] = _parse_date(raw_date)
 
         if not data["runtime"]:
-            # vixen 的 runLength 格式为 HH:MM:SS
-            rt = video_obj.get("runLength") or video_obj.get("runLengthFormatted") or video_obj.get("duration") or ""
-            if rt:
-                # HH:MM:SS 格式
-                hms = re.match(r'(\d+):(\d+):(\d+)', str(rt))
-                if hms:
-                    h, m, s = int(hms.group(1)), int(hms.group(2)), int(hms.group(3))
-                    data["runtime"] = str(h * 60 + m + (1 if s >= 30 else 0))
-                else:
-                    # ISO 8601 PT30M 格式
-                    m2 = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?', str(rt))
-                    if m2:
-                        hours = int(m2.group(1) or 0)
-                        minutes = int(m2.group(2) or 0)
-                        data["runtime"] = str(hours * 60 + minutes)
-                    else:
-                        data["runtime"] = str(rt)
+            rt = (
+                video_obj.get("runLength")
+                or video_obj.get("runLengthFormatted")
+                or video_obj.get("duration")
+                or ""
+            )
+            data["runtime"] = _parse_runtime(rt)
 
-        # 演员 — vixen 使用 modelsSlugged 字段
+        # 演员 — 使用 modelsSlugged 字段（兜底，最终由 HTML 解析覆盖）
         if not data["actors"]:
             performers = (
                 video_obj.get("modelsSlugged")
@@ -240,7 +267,7 @@ def _parse_from_next_data(next_data: dict, data: dict):
                     elif isinstance(p, str):
                         data["actors"].append(p)
 
-        # 导演 — 作为 director 字段存入
+        # 导演
         if not data.get("director"):
             directors = video_obj.get("directors") or []
             if isinstance(directors, list) and directors:
@@ -248,7 +275,7 @@ def _parse_from_next_data(next_data: dict, data: dict):
                 if names:
                     data["director"] = ", ".join(names)
 
-        # 标签/类型 — vixen 页面 JSON 中无 tags，留空由 HTML 解析补充
+        # 标签/类型
         if not data["genres"]:
             tags = (
                 video_obj.get("tags")
@@ -265,7 +292,7 @@ def _parse_from_next_data(next_data: dict, data: dict):
                     elif isinstance(t, str):
                         data["genres"].append(t)
 
-        # 封面图 — 优先选最高分辨率的 mainLandscape（1920x1080）
+        # 封面图 — 优先选最高分辨率的 mainLandscape
         if not data["cover"]:
             images = video_obj.get("images", {})
             if isinstance(images, dict):
@@ -282,18 +309,16 @@ def _parse_from_next_data(next_data: dict, data: dict):
                 if best_url:
                     data["cover"] = best_url
 
-            # 若上面没找到，用 videoImage
             if not data["cover"]:
                 vi = video_obj.get("videoImage") or {}
                 if isinstance(vi, dict):
                     data["cover"] = vi.get("src") or ""
 
-            # structuredData 里的 thumbnailUrl
             if not data["cover"]:
-                sd = next_data.get("props", {}).get("pageProps", {}).get("structuredData") or {}
+                sd = page_props.get("structuredData") or {}
                 data["cover"] = sd.get("thumbnailUrl") or ""
 
-        # 剧照原图 — 优先用 pageProps.galleryImages，备选用 carousel[i].main[0].src
+        # 剧照原图 — 优先用 pageProps.galleryImages
         if not data["gallery_urls"]:
             gallery_images = page_props.get("galleryImages", [])
             if isinstance(gallery_images, list) and gallery_images:
@@ -316,25 +341,6 @@ def _parse_from_next_data(next_data: dict, data: dict):
 
     except Exception as e:
         print(f"[WARN] 解析 __NEXT_DATA__ 时出错: {e}")
-
-
-def _deep_find(obj, key: str, depth: int = 4):
-    """在嵌套字典中深度查找指定 key"""
-    if depth <= 0:
-        return None
-    if isinstance(obj, dict):
-        if key in obj:
-            return obj[key]
-        for v in obj.values():
-            result = _deep_find(v, key, depth - 1)
-            if result is not None:
-                return result
-    elif isinstance(obj, list):
-        for item in obj:
-            result = _deep_find(item, key, depth - 1)
-            if result is not None:
-                return result
-    return None
 
 
 def _parse_from_json_ld(jld: dict, data: dict):
@@ -396,17 +402,11 @@ def _parse_from_json_ld(jld: dict, data: dict):
         data["cover"] = str(img)
 
     if not data["runtime"]:
-        rt = jld.get("duration") or ""
-        if rt:
-            m = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?', str(rt))
-            if m:
-                hours = int(m.group(1) or 0)
-                minutes = int(m.group(2) or 0)
-                data["runtime"] = str(hours * 60 + minutes)
+        data["runtime"] = _parse_runtime(jld.get("duration") or "")
 
 
 def _parse_from_html(soup: BeautifulSoup, data: dict):
-    """直接从 HTML 标签中提取元数据（兜底策略）"""
+    """直接从 HTML 标签中提取元数据（兜底策略，演员部分始终覆盖）"""
     # title
     if not data["title"]:
         og_title = soup.find("meta", property="og:title")
@@ -433,42 +433,35 @@ def _parse_from_html(soup: BeautifulSoup, data: dict):
         if og_img:
             data["cover"] = og_img.get("content", "").strip()
 
-    # date — 尝试从 <time> 标签或带 date 类名的元素中提取
+    # date
     if not data["date"]:
         time_tag = soup.find("time")
         if time_tag:
             raw = time_tag.get("datetime") or time_tag.get_text(strip=True)
             data["date"] = _parse_date(raw)
 
-    # actors — 从包含 performer 链接的父容器中按顺序收集，遇到 "&" span 即停（&后面的是男演员）
+    # actors — 从包含 performer 链接的父容器中按顺序收集，遇到 "&" span 即停
     perf_links = soup.find_all("a", href=re.compile(r'/(pornstars|models|performers?)/'))
     if perf_links:
-        # 找到第一个 performer 链接的父容器，在其中按子节点顺序遍历
         parent = perf_links[0].parent
         female_actors = []
-        hit_amp = False
         for child in parent.children:
             if hasattr(child, 'get_text'):
-                # 是元素节点
                 text = child.get_text(strip=True)
                 if text == '&':
-                    hit_amp = True
                     break
                 if child.name == 'a' and re.search(r'/(pornstars|models|performers?)/', child.get('href', '')):
-                    name = text
-                    if name and name not in female_actors:
-                        female_actors.append(name)
-        # 若找到了 & 前面的演员就替换；若未找到 & （只有一名演员）则保留全部
+                    if text and text not in female_actors:
+                        female_actors.append(text)
         if female_actors:
             data["actors"] = female_actors
         elif not data["actors"]:
-            # 向前兼容：如果没有 & 就直接放全部链接名
             for a in perf_links:
                 name = a.get_text(strip=True)
                 if name and name not in data["actors"]:
                     data["actors"].append(name)
 
-    # genres — 典型 vixen 页面有 <a href="/categories/..."> 或 tag 类链接
+    # genres
     if not data["genres"]:
         for a in soup.find_all("a", href=re.compile(r'/(categories|tags|genres?)/')):
             name = a.get_text(strip=True)
@@ -483,8 +476,9 @@ def _parse_from_html(soup: BeautifulSoup, data: dict):
 def build_nfo_xml(info: dict, dir_name: str = "") -> str:
     """根据 info 字典构建 Kodi/Emby 兼容的 NFO XML 字符串
 
-    sorttitle 从 dir_name 中用正则提取 Vixen.YY.MM.DD 部分，
-    originaltitle = sorttitle + " " + title
+    sorttitle 从 dir_name 中用正则提取 Blacked.YY.MM.DD 部分，
+    originaltitle = sorttitle + " " + title（不含 [中字] 前缀）
+    目录名带 -C 后缀时：title 加 [中字]，sorttitle 加 -C 后缀
     """
     root = ET.Element("movie")
 
@@ -495,18 +489,19 @@ def build_nfo_xml(info: dict, dir_name: str = "") -> str:
 
     title = info.get("title", "")
 
-    # 从目录名提取 Vixen.YY.MM.DD 格式的前缀（也兼容 Blacked/Tushy 等正则）
+    # 从目录名提取 Studio.YY.MM.DD 格式的前缀
     sorttitle_match = re.search(r'([A-Za-z]+\.\d{2}\.\d{2}\.\d{2})', dir_name)
     sorttitle = sorttitle_match.group(1) if sorttitle_match else ""
 
-    # 目录名带 -C 后缀表示中文字幕，在 title 前加 [中字]，sorttitle 加 -C 后缀
+    # 目录名带 -C 后缀表示中文字幕
     is_chinese_sub = bool(re.search(r'-C(?:[^A-Za-z]|$)', dir_name))
     display_title = f"[中字] {title}" if is_chinese_sub else title
     effective_sorttitle = (f"{sorttitle}-C" if is_chinese_sub else sorttitle) if sorttitle else title
 
-    originaltitle = f"{sorttitle} {title}".strip()
+    # originaltitle 不含 [中字]，只是 sorttitle + 空格 + 原始 title
+    originaltitle = f"{sorttitle} {title}".strip() if sorttitle else title
 
-    # plot 包裹在 CDATA 中
+    # plot
     plot_el = ET.SubElement(root, "plot")
     plot_el.text = info.get("plot", "")
 
@@ -543,7 +538,7 @@ def build_nfo_xml(info: dict, dir_name: str = "") -> str:
 
     # uniqueid: url
     uid_url = ET.SubElement(root, "uniqueid")
-    uid_url.set("type", "VixenScraper-Url")
+    uid_url.set("type", "BlackedScraper-Url")
     uid_url.text = info.get("url", "")
 
     # uniqueid: json 摘要
@@ -554,20 +549,16 @@ def build_nfo_xml(info: dict, dir_name: str = "") -> str:
         "Date": date,
     }, ensure_ascii=False)
     uid_json = ET.SubElement(root, "uniqueid")
-    uid_json.set("type", "VixenScraper-Json")
+    uid_json.set("type", "BlackedScraper-Json")
     uid_json.text = json_str
 
     # 美化输出
-    raw_xml = ET.tostring(root, encoding="unicode")
-    dom = minidom.parseString(f"<movie>{raw_xml[7:-8]}</movie>")
-    # 重新用 minidom 解析以便格式化
     dom2 = minidom.parseString(ET.tostring(root, encoding="unicode"))
     pretty = dom2.toprettyxml(indent="  ", encoding="utf-8").decode("utf-8")
-    # toprettyxml 会在第一行加 XML 声明，保留之
     return pretty
 
 
-def save_nfo(info: dict, output_dir: str):
+def save_nfo(info: dict, output_dir: str) -> str:
     """将 NFO 写入 <output_dir>/<dirname>.nfo"""
     dir_name = os.path.basename(output_dir.rstrip(os.sep))
     nfo_filename = f"{dir_name}.nfo"
@@ -576,7 +567,6 @@ def save_nfo(info: dict, output_dir: str):
     os.makedirs(output_dir, exist_ok=True)
 
     xml_str = build_nfo_xml(info, dir_name=dir_name)
-
     with open(nfo_path, "w", encoding="utf-8") as f:
         f.write(xml_str)
 
@@ -585,7 +575,7 @@ def save_nfo(info: dict, output_dir: str):
 
 
 # ---------------------------------------------------------------------------
-# 封面图下载（可选）
+# 图片下载
 # ---------------------------------------------------------------------------
 
 def _make_http_session(proxy: str = None):
@@ -597,14 +587,14 @@ def _make_http_session(proxy: str = None):
     else:
         s = requests.Session()
     s.headers.update(HEADERS)
-    s.cookies.set("consent", "1", domain=".vixen.com")
+    s.cookies.set("consent", "1", domain=COOKIE_DOMAIN)
     if proxy:
         s.proxies.update({"http": proxy, "https": proxy})
     return s
 
 
 def download_cover(cover_url: str, output_dir: str, dir_name: str, proxy: str = None) -> bool:
-    """下载封面图并保存为 jacket.jpg / folder.jpg / poster.jpg"""
+    """下载封面图并保存为 jacket.jpg / folder.jpg / poster.jpg / {dir_name}-poster.jpg"""
     if not cover_url:
         print("[WARN] 未获取到封面图 URL，跳过下载")
         return False
@@ -632,22 +622,19 @@ def download_cover(cover_url: str, output_dir: str, dir_name: str, proxy: str = 
         return False
 
 
-def download_gallery(gallery_urls: list, fanart_dir: str, dir_name: str, proxy: str = None):
-    """下载剧照圈图到 output_dir/extrafanart/ 目录，命名为 {dir_name}-fanart{n}.jpg"""
+def download_gallery(gallery_urls: list, dir_name: str, proxy: str = None):
+    """下载剧照到 fanart_dir 目录，命名为 backdrop{n}.jpg"""
     if not gallery_urls:
         print("[WARN] 没有可用的剧照 URL，跳过")
         return
 
-    import shutil
-    # fanart_dir = os.path.join(output_dir, "extrafanart")
-    # os.makedirs(fanart_dir, exist_ok=True)
-
+    os.makedirs(dir_name, exist_ok=True)
     session = _make_http_session(proxy)
     ok_count = 0
 
     for idx, img_url in enumerate(gallery_urls, start=1):
         fname = f"backdrop{idx}.jpg"
-        save_path = os.path.join(fanart_dir, fname)
+        save_path = os.path.join(dir_name, fname)
         try:
             resp = session.get(img_url, timeout=30)
             resp.raise_for_status()
@@ -661,7 +648,7 @@ def download_gallery(gallery_urls: list, fanart_dir: str, dir_name: str, proxy: 
         except Exception as e:
             print(f"[ERROR] 下载剧照 {idx} 失败: {e}")
 
-    print(f"[INFO] 剧照下载完成: {ok_count}/{len(gallery_urls)} 张，目录: {fanart_dir}")
+    print(f"[INFO] 剧照下载完成: {ok_count}/{len(gallery_urls)} 张，目录: {dir_name}")
 
 
 # ---------------------------------------------------------------------------
@@ -670,9 +657,12 @@ def download_gallery(gallery_urls: list, fanart_dir: str, dir_name: str, proxy: 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Vixen.com 视频详情页刮削器，将元数据保存为 Kodi/Emby NFO 文件"
+        description="Blacked.com 视频详情页刮削器，将元数据保存为 Kodi/Emby NFO 文件"
     )
-    parser.add_argument("url", help="Vixen 视频详情页 URL，例如 https://www.vixen.com/videos/mutual-generosity")
+    parser.add_argument(
+        "url",
+        help="Blacked 视频详情页 URL，例如 https://www.blacked.com/videos/caught-in-the-moment",
+    )
     parser.add_argument("output_dir", help="输出目录，NFO 文件将以该目录名命名")
     parser.add_argument(
         "--no-cover",
@@ -694,12 +684,11 @@ def main():
 
     args = parser.parse_args()
 
-    # 代理支持（通过环境变量也可生效）
     if args.proxy:
         print(f"[INFO] 使用代理: {args.proxy}")
 
     try:
-        info = scrape_vixen(args.url, proxy=args.proxy)
+        info = scrape_blacked(args.url, proxy=args.proxy)
     except requests.exceptions.HTTPError as e:
         print(f"[ERROR] HTTP 错误: {e}")
         sys.exit(1)
@@ -726,15 +715,16 @@ def main():
     # 写 NFO
     nfo_path = save_nfo(info, args.output_dir)
 
+    dir_name = os.path.basename(args.output_dir.rstrip(os.sep))
+
     # 下载封面
-    if not args.no_cover:
-        dir_name = os.path.basename(args.output_dir.rstrip(os.sep))
-        download_cover(info["cover"], args.output_dir, dir_name, proxy=args.proxy)
+    # if not args.no_cover:
+    #     download_cover(info["cover"], args.output_dir, dir_name, proxy=args.proxy)
 
     # 下载剧照
-    if not args.no_gallery:
-        dir_name = os.path.basename(args.output_dir.rstrip(os.sep))
-        download_gallery(info.get("gallery_urls", []), args.output_dir, dir_name, proxy=args.proxy)
+    # if not args.no_gallery:
+    #     fanart_dir = args.output_dir
+    #     download_gallery(info.get("gallery_urls", []), fanart_dir, proxy=args.proxy)
 
     print(f"\n[DONE] 完成！NFO 路径: {nfo_path}")
 

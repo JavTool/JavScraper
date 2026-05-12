@@ -130,6 +130,31 @@ namespace JavScraper.Tools.Services
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task FixNfoFilesAsync(string path)
+        {
+            Dictionary<string, string> javFiles = new Dictionary<string, string>();
+            DirectoryHelper.GetNfoFiles(path, javFiles);
+
+            // 第一步：处理所有 NFO 文件的基本元数据
+            foreach (var javFile in javFiles)
+            {
+                var fileExt = Path.GetExtension(javFile.Key);
+                if (fileExt.Contains(".nfo", StringComparison.CurrentCultureIgnoreCase) && !javFile.Key.Contains(".bak.nfo"))
+                {
+                    await ProcessNfoFile(javFile.Key);
+                }
+            }
+
+            // 第二步：执行标签修复和重命名操作
+            await FixNfoTagsAsync(path);
+        }
+
+
+        /// <summary>
         /// 调用外部修复器对目录下的 NFO 文件执行标签/名称的批量修正。
         /// </summary>
         /// <param name="path">要处理的根目录路径。</param>

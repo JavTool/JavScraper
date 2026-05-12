@@ -142,6 +142,8 @@ namespace JavScraper.Tools.Scrapers
                 => dic.Where(o => o.Key.Contains(_key)).Select(o => o.Value).FirstOrDefault();
 
             var genres = ExtractValidParts(GetValue("ジャンル"));
+
+            var tags = ExtractTagsParts(GetValue("関連タグ"));
             var actors = doc.DocumentNode.SelectNodes("//span[@id='performer']/a")?
                  .Select(o => o.InnerText.Trim()).ToList();
 
@@ -161,6 +163,7 @@ namespace JavScraper.Tools.Scrapers
                 Set = GetValue("シリーズ"),
                 Director = GetValue("監督"),
                 //Plot = node.SelectSingleNode("./h3")?.InnerText,
+                Tags = tags,
                 Genres = genres,
                 Actors = actors,
                 Samples = samples,
@@ -177,6 +180,29 @@ namespace JavScraper.Tools.Scrapers
             return video;
         }
 
+        /// <summary>
+        /// 取出 &nbsp; 分割的不含 "40％" 字符的部分
+        /// </summary>
+        /// <param name="input">原始 HTML 编码字符串</param>
+        /// <returns>过滤后的字符串数组</returns>
+        public static List<string> ExtractTagsParts(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return Array.Empty<string>().ToList();
+
+            // 解码 HTML 实体，将 "&nbsp;" 转换为空格
+            //string decodedString = HttpUtility.HtmlDecode(input);
+            string decodedString = input.Replace("&nbsp;", "|");
+            //var tags = Regex.Matches(input, @"#([^\s#]+)")
+            //    .Select(m => m.Groups[1].Value)
+            //    .Distinct()
+            //    .ToList();
+            // 按空格拆分，并过滤掉包含 "40％" 的部分
+            return Regex.Matches(input, @"#([^\s#]+)")
+                .Select(m => m.Groups[1].Value)
+                .Distinct()
+                .ToList();
+        }
         /// <summary>
         /// 取出 &nbsp; 分割的不含 "40％" 字符的部分
         /// </summary>
@@ -207,6 +233,8 @@ namespace JavScraper.Tools.Scrapers
             var videoNode = doc.DocumentNode.SelectSingleNode("//p[contains(@class,'tmb')]/a");
             if (videoNode == null)
                 return null;
+
+            //var videoNode = videoNodes[videoNodes.Count - 1];
 
             var videoUrl = videoNode.GetAttributeValue("href", null);
             var javVideo = await ParsePage(videoUrl);

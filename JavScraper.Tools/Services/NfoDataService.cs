@@ -94,7 +94,7 @@ namespace JavScraper.Tools.Services
                 // 保存修改后的 NFO
                 _nfoManager.SaveMetadata(nfoVideoInfo.Title, nfoVideoInfo.OriginalTitle, nfoVideoInfo.SortTitle,
                 nfoVideoInfo.Plot, nfoVideoInfo.Number, nfoVideoInfo.Actors,
-                nfoVideoInfo.Genres, nfoVideoInfo.Tags, nfoVideoInfo.GetYear(), nfoVideoInfo.Date);
+                nfoVideoInfo.Genres, nfoVideoInfo.Tags, null, null, null, nfoVideoInfo.GetYear(), nfoVideoInfo.Date);
 
                 // 复制到其他 NFO 文件
                 await CopyToOtherNfoFiles(nfoFilePath, nfoVideoInfo);
@@ -171,7 +171,7 @@ namespace JavScraper.Tools.Services
 
                 // 获取完整的 JavVideo 对象以获取完整的元数据
                 var javVideoForProcessing = await videoInfoFetcher.TryGetMetadataAsync(javId);
-                
+
                 // 创建标准视频元数据
                 var standardMetadata = CreateStandardMetadata(videoInfo, javId);
 
@@ -197,10 +197,10 @@ namespace JavScraper.Tools.Services
 
                 // 保存更新后的 NFO
                 var nfoManager = new NfoDocument(nfoFilePath);
-                
+
                 nfoManager.SaveMetadata(standardMetadata.Title, standardMetadata.OriginalTitle, standardMetadata.SortTitle,
                      javVideoForProcessing?.Plot, standardMetadata.Number, javVideoForProcessing?.Actors,
-                     processedGenres, processedTagsList, javVideoForProcessing?.GetYear(), standardMetadata.Date);
+                     processedGenres, processedTagsList, null, null, null, javVideoForProcessing?.GetYear(), standardMetadata.Date);
 
                 result.IsSuccess = true;
                 result.ProcessedTitle = standardMetadata.Title;
@@ -317,7 +317,7 @@ namespace JavScraper.Tools.Services
                     var javVideo = await new VideoInfoFetcher(_loggerFactory).TryGetMetadataAsync(videoInfo.Number);
                     nfoManager.SaveMetadata(videoInfo.Title, videoInfo.OriginalTitle, videoInfo.SortTitle,
                          javVideo?.Plot ?? "", videoInfo.Number, javVideo?.Actors ?? new List<string>(),
-                         javVideo?.Genres ?? new List<string>(), javVideo?.Tags ?? new List<string>(), javVideo?.GetYear(), javVideo?.Date ?? videoInfo.Date);
+                         javVideo?.Genres ?? new List<string>(), javVideo?.Tags ?? new List<string>(), null, null, null, javVideo?.GetYear(), javVideo?.Date ?? videoInfo.Date);
                     _logger.LogDebug("已复制 NFO 数据到: {FilePath}", nfoFile);
                 }
             }

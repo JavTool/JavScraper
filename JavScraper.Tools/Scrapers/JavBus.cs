@@ -61,7 +61,7 @@ namespace JavScraper.Tools.Scrapers
         public override async Task<JavVideo> ParsePage(string url)
         {
             //https://www.javbus.cloud/ABP-933
-            var doc = await GetHtmlDocumentAsync(url);
+            var doc = await GetRenderedHtmlByPlaywrightAsync(url, waitForSelector: "div.container");
             if (doc == null)
                 return null;
 
@@ -121,7 +121,7 @@ namespace JavScraper.Tools.Scrapers
         public async Task<JavVideo> SearchAndParseJavVideo(string javId)
         {
             var searchUrl = $"https://www.javbus.com/search/{javId}";
-            var doc = await GetHtmlDocumentAsync(searchUrl);
+            var doc = await GetRenderedHtmlByPlaywrightAsync(searchUrl, waitForSelector: "div.video-list");
             if (doc == null)
                 return null;
 
